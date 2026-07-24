@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Remi × Pinch — Build Log</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+:root{--ink:#0f172a;--mut:#64748b;--line:#e2e8f0;--bg:#f8fafc;--card:#fff;--brand:#4f46e5;--ok:#059669;--warn:#b45309;--pink:#db2777;}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.6}
+.wrap{max-width:980px;margin:0 auto;padding:0 20px}
+header{background:linear-gradient(135deg,#1e1b4b,#4f46e5);color:#fff;padding:40px 0 32px}
+header h1{margin:0 0 6px;font-size:30px}header p{margin:0;color:#c7d2fe}
+h2{font-size:22px;margin:36px 0 10px;border-bottom:2px solid var(--line);padding-bottom:6px}
+h3{font-size:16px;margin:20px 0 6px}
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:12px 0}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#f1f5f9;font-weight:700;font-size:12.5px}tr:last-child td{border-bottom:none}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 10px;border-radius:999px}
+.done{background:#ecfdf5;color:var(--ok)}.prog{background:#fffbeb;color:var(--warn)}.pend{background:#f1f5f9;color:var(--mut)}
+.mermaid{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin:14px 0;text-align:center}
+.note{font-size:13px;color:var(--mut)}
+.decision{background:#eef2ff;border-left:4px solid var(--brand);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:14px}
+.issue{background:#fff7ed;border-left:4px solid var(--warn);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:14px}
+footer{color:var(--mut);font-size:12.5px;text-align:center;padding:30px 0 50px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>Remi × Pinch — Build Log</h1>
+<p>Pinch 50K Hackathon · build window Fri 24 Jul 19:00 → Sun 26 Jul 19:00 AEST · last updated <strong>Fri 24 Jul ~21:00 AEST</strong></p>
+</div></header>
+<div class="wrap">
+
+<h2>Status board</h2>
+<table>
+<tr><th>WS</th><th>Scope</th><th>Status</th><th>Verified</th></tr>
+<tr><td><b>WS1</b> pinch-mcp</td><td><b>18-tool</b> MCP server over Pinch API (stdio + Streamable HTTP), confirm-guarded writes, dishonour taxonomy, cashflow + payer statements + full subscription lifecycle + <b>shared-cost split payments</b> (create_split / get_split_status with exposure risk-notes)</td><td><span class="pill done">DONE v6</span></td><td>tsc clean · selftest 18 · <b>live sandbox ✔</b> incl. a real 3-party $1,200 studio-rent split (spl_Bh8QfH0Rai) created &amp; reconstructed purely from Pinch data</td></tr>
+<tr><td><b>WS2</b> LyboAI</td><td>Generic MCP bridge (dual-seam), <b>three Remi shapes</b>: standalone "payments-support" template · "support-with-remi" (general support agent with Remi as the payments <i>workflow</i> branch — the CoachPlus Support Agent model) · add-Remi-to-any-bot PATCH recipe</td><td><span class="pill done">CODE COMPLETE</span></td><td>strict-TS checked vs staged sources; live round-trip vs pinch-mcp HTTP; guard language byte-identical across all three shapes. Pending: apply seed patches + repo typecheck/tests</td></tr>
+<tr><td><b>WS3</b> CoachPlus</td><td>Pinch provider — now <b>real recurring subscriptions</b> (find-or-create plan → subscription → setup link, trials via deferred startDate), billing lifecycle webhooks (renewal GST invoices, dishonour → past_due, cancellation → downgrade), enrolment Pinch path, feed-first Remi panel (/coach/payments)</td><td><span class="pill done">CODE COMPLETE v2</span></td><td>tsc 0 errors (WS3+WS3b together vs staged sources); webhook HMAC unit-tested. Pending: repo typecheck/tests + sandbox e2e</td></tr>
+<tr><td><b>WS4</b> Toolkit + demo</td><td>Packaging, recipes, seed script, 60-sec video</td><td><span class="pill pend">PENDING</span></td><td>—</td></tr>
+</table>
+
+<h2>System architecture</h2>
+<div class="mermaid">
+flowchart LR
+  P["Pinch sandbox API"] --> M{{"pinch-mcp · 15 tools<br/>stdio + HTTP"}}
+  M --> C1["Claude / Cursor<br/>(portability demo)"]
+  M --> B["LyboAI MCP bridge<br/>(WS2)"]
+  B --> R[["Remi template<br/>Do · Ask · Fix"]]
+  P --> CP["CoachPlus pinch-client<br/>(WS3)"]
+  CP --> UI["/coach/payments<br/>digest + needs-attention feed"]
+  R -. widget/chat .-> UI
+</div>
+
+<h2>WS1 — pinch-mcp · timeline</h2>
+<table>
+<tr><th>Time (AEST)</th><th>Event</th></tr>
+<tr><td>19:03</td><td><b>Build window opens.</b> Kickoff confirmed; task board created.</td></tr>
+<tr><td>19:04–19:14</td><td><b>Research agent</b> sweeps docs.getpinch.com.au (73 pages downloaded) → verified cheat-sheet: OAuth form-encoded token, <code>pinch-version: 2020.1</code>, money-in-cents, dishonour semantics, <code>#code</code> failure simulation, Time-Travel, <code>Current-Merchant</code>.</td></tr>
+<tr><td>19:15–19:25</td><td><b>Spec v1</b> written (4 workstreams, MVP cut-lines, demo script) + committed. Managed-merchants guide folded in.</td></tr>
+<tr><td>19:25–19:35</td><td><b>Build agent v1:</b> 12 tools, dual transport, confirm-guards, dishonour map. tsc clean, selftest green, guards verified over live tools/call.</td></tr>
+<tr><td>~19:50</td><td><b>Huddle: "is Remi too narrow?"</b> → Decision: <b>Do / Ask / Fix</b> triad (see Decisions). Spec v2.</td></tr>
+<tr><td>~20:00</td><td><b>v2:</b> +<code>pinch_cashflow_summary</code>, +<code>pinch_create_subscription</code> (found real schema: <code>recurringPayment{frequencyOffset, frequencyInterval}</code>; sources optional at subscribe-time → setup-link pattern). 14 tools.</td></tr>
+<tr><td>~20:25</td><td><b>Sandbox creds arrive.</b> First smoke: auth ✔, payer create 400 (bank a/c must be 3–9 digits) → fixed → <b>SMOKE COMPLETE ✔</b> (real payer + $59 scheduled payment).</td></tr>
+<tr><td>20:30–20:45</td><td><b>Time-Travel probes:</b> header accepted (event timestamps shift) but scheduled DD never flips to dishonoured via API polling. Hosted-page automation blocked from container (network allowlist). Fallback chosen: synchronous card path via payment link (+ tonight's real overnight run as backup).</td></tr>
+<tr><td>~20:50</td><td>Payment-link probe: 400 → <code>allowedPaymentMethods</code> is required; discovered <code>metadata</code> passes through to the Payment object (adopted for CoachPlus correlation). Live link created ✔.</td></tr>
+<tr><td>~21:00</td><td><b>v3:</b> +<code>pinch_payer_statement</code> (statement of accounts, live-tested), payment-link fixes, README honesty notes, and a <b>timezone bug fixed</b>: Pinch renders transactionDate as midnight-AEST-in-UTC (<code>14:00Z</code>) — naive UTC slicing shifted every payment a day early. 15 tools.</td></tr>
+<tr><td>~22:00</td><td><b>WS3b parity upgrade:</b> Pinch plan checkout becomes a <b>real recurring subscription</b> (plan find-or-create → subscription → first-payment/setup link; trialDays → deferred startDate); webhook gains the billing lifecycle (renewal invoices with GST split, dishonour → <code>past_due</code>, <code>subscription-cancelled</code> → downgrade). $0/100%-discount path skips Pinch entirely. Remaining honesty-slide gaps: true deferred-charge trials, Managed-Merchant per-coach settlement, proration.</td></tr>
+<tr><td>~23:10</td><td><b>v6 — coach revenue models:</b> <code>create_subscription</code> gains <b>term billing</b> (endType <code>number-of-payments</code> / end-date offsets), <b>deposit + instalments</b> (plans' native <code>fixedPayments</code> coexisting with recurring), plan-level <code>metadata</code> for per-instructor attribution. Live-verified: "$100 deposit + $59/week × 10" term sub created &amp; cancelled. <b>API discovery:</b> Pinch hard-requires a stored source at subscription-create (docs say optional) → honest two-step: plan + setup link, subscription on re-call (<code>pendingSetup</code>). Covers per-session / per-term / package / multi-instructor coach economics.</td></tr>
+<tr><td>~22:30</td><td><b>v5 — SPLIT PAYMENTS (founder direction):</b> +<code>pinch_create_split</code> +<code>pinch_get_split_status</code> — shared-cost splitting for service businesses (trainers sharing a studio, co-hosted programs, academy cost pools, community events) with largest-remainder allocation, JSON metadata envelopes, and exposure tracking ("Priya Fitness still owes $600 — the bill is being carried by whoever fronted it"). <b>Live-verified:</b> real 3-party $1,200 50/30/20 split created + reconstructed. Empirical find: the payment-links LIST endpoint returns <code>metadata</code> + nested <code>payments</code> (undocumented) — enables fully server-side reconstruction. Remi packs gained a SPLITS playbook (both templates under cap; one edit updates both).</td></tr>
+<tr><td>~23:45</td><td><b>Originality pass:</b> split use-case examples (which had originated from a third-party text) rewritten as original service-business scenarios across playbook, instructions, README, tool descriptions and demo data; programmatic banned-pattern sweep over all bundles: zero hits. Sandbox re-seeded: freight-themed split deleted, replaced by "August studio rent + utilities — Southbank studio" (<code>spl_Bh8QfH0Rai</code>).</td></tr>
+<tr><td>~21:40</td><td><b>v4:</b> +<code>pinch_cancel_subscription</code> (real DELETE /subscriptions/{id} endpoint verified; GET-first preview; graceful 400 handling live-tested) → <b>16 tools, full subscription lifecycle</b>. In parallel, WS2b ships the <b>support-with-remi</b> template + <b>remi-capability</b> recipe: Remi as a payments workflow inside a general support agent (founder's sub-agent model), instructions composed at 5,679/8,000 chars, guard language byte-identical across all three deployment shapes.</td></tr>
+</table>
+
+<h3>WS1 architecture</h3>
+<div class="mermaid">
+flowchart TB
+  subgraph pinch-mcp
+    T["tools.ts · 11 read + 4 write"] --> G{"confirm === true?"}
+    G -- no --> PV["structured preview<br/>(no API call)"]
+    G -- yes --> CL["pinch-client.ts<br/>token cache · retries ·<br/>PascalCase normalize · pinchDate()"]
+    D["dishonour-map.ts<br/>code → cause · ownership · action"] --> T
+  end
+  CL --> API["api.getpinch.com.au/test"]
+  S1["stdio"] --> T
+  S2["Streamable HTTP :port"] --> T
+</div>
+
+<h2>WS2 — LyboAI bridge · architecture</h2>
+<div class="mermaid">
+flowchart LR
+  subgraph LyboAI
+    EX["integrations/executor.ts<br/>catalog actions flagged mcp:true"] --> BR["integrations/mcp.ts<br/>JSON-RPC bridge (JSON + SSE)"]
+    AI["ai/toolExec.ts<br/>AiToolDef type:'mcp'"] --> BR
+    TP["flow_templates: payments-support<br/>bots.type='payments' (free-form ✔)"] --> AI
+  end
+  BR --> M{{"pinch-mcp --http"}}
+</div>
+<p class="note">Dual-seam by design: connector path gives test-connection + flow nodes + logging; AI-tool path powers conversational Remi (preview → human approve → <code>confirm:true</code> across two turns maps perfectly onto the orchestrator's one-tool-round loop).</p>
+
+<h2>WS3 — CoachPlus · architecture</h2>
+<div class="mermaid">
+flowchart LR
+  subgraph CoachPlus
+    SEAM["payments provider seam<br/>(SUBSCRIPTION_PROVIDER / PAYMENTS_PROVIDER)"] --> PC["pinch-client.ts (local)"]
+    ENR["/api/enrolments<br/>pinch branch"] --> PC
+    WH["/api/pinch/webhook<br/>t=,v2= HMAC verify"] --> FE["finalizeEnrolment (idempotent)"]
+    SUM["/api/remi/summary"] --> PC
+    ACT["/api/remi/act<br/>approve-then-act + audit()"] --> PC
+    PAGE["/coach/payments<br/>digest strip · needs-attention feed · chat slot"] --> SUM
+    PAGE --> ACT
+  end
+  PC --> API2["Pinch API"]
+  API2 -- webhooks --> WH
+</div>
+
+<h2>Issues encountered</h2>
+<div class="issue"><b>Time-Travel doesn't trigger processing via raw API.</b> Header verified accepted, but scheduled DD payments never flipped to dishonoured across create/read/poll patterns. Docs hint the Dev Portal "sends headers back and forth". <i>Mitigation:</i> synchronous card-path dishonours via payment link + real overnight run; question queued for #hackathon-help.</div>
+<div class="issue"><b>Hosted pay page unreachable from build container</b> (network allowlist covers api/auth hosts only) — automated link-payment seeding moved to manual/local browser.</div>
+<div class="issue"><b>API strictness the docs don't state:</b> bank account numbers 3–9 digits; <code>allowedPaymentMethods</code> required on payment links; card sources need a CaptureJS token (no raw PAN server-side).</div>
+<div class="issue"><b>Timezone trap:</b> <code>transactionDate</code> comes back as midnight AEST rendered in UTC — date-bucketing must shift +10h or every payment lands a day early. Found because the live smoke's 7-day window showed 0 scheduled.</div>
+<div class="issue"><b>LyboAI docs ≠ code:</b> the documented <code>connectors/&lt;key&gt;.ts</code> registry doesn't exist (catalog-template executor + Fastify instead) — bridge built against the code, not the docs. Also: default bot guardrails would silently suppress tool-grounded answers (low-confidence fallback), and <code>from-template</code> strips <code>aiConfig</code> — both patched.</div>
+<div class="issue"><b>Live keys were exposed in a screenshot</b> — rotation advised; build uses test keys only.</div>
+
+<h2>Key decisions</h2>
+<div class="decision"><b>Do / Ask / Fix triad</b> (huddle, ~19:50): recovery-only was too narrow — failures are rare events; daily habit requires conversational billing setup (Do) + money Q&A/digest (Ask) on top of recovery (Fix). Cost: 2 extra tools + prompts. Delivery: feed + digest first, chat second.</div>
+<div class="decision"><b>MCP-first, bridge for LyboAI:</b> one Pinch core consumed by external AI hosts directly and by LyboAI through a new generic MCP bridge — a platform upgrade (any MCP now plugs into LyboAI), Pinch first.</div>
+<div class="decision"><b>Approval lives in the tool layer:</b> every write tool refuses without <code>confirm:true</code> and returns a preview — so no host (chat, flow, UI) can move money without an explicit human step. Refund cap env-enforced.</div>
+<div class="decision"><b>Payment-link-first collections</b> for the hackathon (recommended by Pinch's own managed-merchants guide); recurring schedules post-hackathon. <code>metadata</code> passthrough used for correlation instead of fragile description markers.</div>
+<div class="decision"><b>Split payments in-scope (founder call, Fri ~22:00):</b> shared-cost collection for service businesses is an underserved wedge — whenever several businesses share one bill (a studio, a co-hosted program, an academy cost pool, a community event), whoever fronts it becomes the group's unpaid lender. Payment-splitting also sits on Pinch's own inspiration list. Composed entirely from verified primitives (links + metadata passthrough); Remi's exposure thresholds (&gt;14 days or &gt;25% of total) make the imbalance visible and chase it down. Use-case examples were later rewritten as fully original scenarios (see 23:45 originality pass).</div>
+<div class="decision"><b>Statement of accounts added; Xero + report-suite deferred to roadmap</b> — First Submission locks the concept Sunday; Polish Week forbids new features. Email follow-up via CoachPlus's existing email adapter is the Saturday stretch item.</div>
+
+<h2>Next up</h2>
+<table>
+<tr><th>#</th><th>Item</th><th>Owner</th></tr>
+<tr><td>1</td><td>Apply LyboAI seed patches + <code>npm run typecheck</code>/<code>test</code> in both repos</td><td>Rajan (local) / agents</td></tr>
+<tr><td>2</td><td>Pay the seeded payment link with test card 4242… (instant dishonour data)</td><td>Rajan (10 sec)</td></tr>
+<tr><td>3</td><td>Register Pinch webhook → CoachPlus endpoint; sandbox e2e</td><td>agents</td></tr>
+<tr><td>4</td><td>WS4: toolkit packaging, seed script, 60-sec video</td><td>agents + Rajan</td></tr>
+</table>
+
+</div>
+<footer>Remi × Pinch build log · updated continuously through the 48-hour window · #PinchMeIWant50K</footer>
+<script>mermaid.initialize({startOnLoad:true,theme:"base",themeVariables:{primaryColor:"#eef2ff",primaryBorderColor:"#818cf8",primaryTextColor:"#1e1b4b",lineColor:"#94a3b8",fontSize:"13px"}});</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# secrets — never commit credentials
+.env
+.env.*
+!.env.example
+
+# logs & OS noise
+*.log
+.DS_Store
+Thumbs.db

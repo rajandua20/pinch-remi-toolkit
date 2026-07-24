@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Remi — the AI payments teammate for Pinch merchants</title>
+<meta name="theme-color" content="#1A1A2E"/>
+<meta name="description" content="Describe how you charge in plain English. A deterministic compiler builds it on Pinch, runs it, and fixes it when payments fail."/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+:root{
+  --ink:#1A1A2E; --mut:#6B7280; --faint:#9CA3AF; --line:#E5E7EB; --bg:#F7F8FC; --card:#ffffff;
+  --brand:#F26522; --brand2:#F97316; --indigo:#4F46E5; --purple:#7C5CFC; --deep:#1A1A2E; --deep2:#232345;
+  --ok:#2ECC71; --ok-ink:#1E9E5A; --warn:#b45309; --bad:#dc2626;
+  --shadow-card:0 1px 2px rgb(26 26 46/.04),0 1px 6px -1px rgb(26 26 46/.06);
+  --term-bg:#14142B; --term-line:#26264A; --term-ink:#C9CEDE; --term-green:#2ECC71;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:"Geist",Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+a{color:var(--brand)}
+code,pre,.mono{font-family:var(--mono)}
+h2{font-size:28px;margin:0 0 6px;letter-spacing:-.02em;color:var(--ink)}
+.kicker{font-size:12.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);margin:0 0 8px}
+.lead{color:var(--mut);font-size:16px;max-width:760px;margin:0 0 26px}
+section{padding:64px 0}
+section+section{border-top:1px solid var(--line)}
+
+/* ---------- hero ---------- */
+.hero{background:
+  radial-gradient(1100px 500px at 15% -10%, rgba(242,101,34,.16), transparent 60%),
+  radial-gradient(900px 480px at 90% 0%, rgba(124,92,252,.13), transparent 55%),
+  linear-gradient(150deg,#16162B 0%, #1A1A2E 45%, #232345 100%);
+  color:#fff;padding:0 0 84px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;mask-image:radial-gradient(720px 460px at 50% 0%,#000 30%,transparent 100%);-webkit-mask-image:radial-gradient(720px 460px at 50% 0%,#000 30%,transparent 100%)}
+.hero .wrap{position:relative;z-index:1}
+.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
+.logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:19px;letter-spacing:-.01em;color:#fff}
+.logo .ai{color:var(--brand);font-weight:800}
+.logo .divider{color:#3A3A5C;font-weight:400}
+.logo .product{color:#B8BDD3;font-weight:600;font-size:14.5px}
+.logo .product b{color:var(--brand2);font-weight:700}
+.nav-links{display:flex;gap:22px;font-size:14px}
+.nav-links a{color:#B8BDD3;text-decoration:none}
+.nav-links a:hover{color:#fff}
+.hero-inner{padding:56px 0 0;max-width:820px}
+.eyebrow{font-size:12.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--brand2);margin:0 0 14px}
+.hero h1{font-size:clamp(32px,5.4vw,54px);line-height:1.08;margin:0 0 18px;letter-spacing:-.03em}
+.hero h1 .grad{background:linear-gradient(90deg,#F26522,#FDBA74);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{font-size:19px;color:#B8BDD3;max-width:640px;margin:0 0 26px;line-height:1.55}
+.badges{display:flex;flex-wrap:wrap;gap:10px}
+.badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:#E7E9F2;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);padding:6px 13px;border-radius:999px;backdrop-filter:blur(4px)}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
+.ctas{display:flex;flex-wrap:wrap;gap:14px;margin:30px 0 0}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding:13px 24px;border-radius:11px;text-decoration:none;transition:transform .12s ease,box-shadow .12s ease,background .12s ease;border:0;cursor:pointer;font-family:var(--sans)}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 8px 24px rgba(242,101,34,.42)}
+.btn-primary:hover{background:var(--brand2);box-shadow:0 10px 30px rgba(249,115,22,.5)}
+.btn-ghost{background:transparent;color:#E7E9F2;border:1px solid rgba(255,255,255,.28)}
+.btn-ghost:hover{background:rgba(255,255,255,.08)}
+.hero-strip{margin-top:52px;background:rgba(20,20,43,.62);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 20px;font-family:var(--mono);font-size:13.5px;color:#A9AFC6;display:flex;flex-wrap:wrap;gap:8px 26px}
+.hero-strip b{color:#fff;font-weight:600}
+
+/* ---------- cards ---------- */
+.grid{display:grid;gap:18px}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(235px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 22px 20px;box-shadow:var(--shadow-card);transition:box-shadow .15s ease,transform .15s ease;display:flex;flex-direction:column}
+.card:hover{box-shadow:0 10px 30px rgba(26,26,46,.10);transform:translateY(-2px)}
+.card .icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px;background:linear-gradient(135deg,#FFF4EE,#FFF9F5);border:1px solid #FBDCC8}
+.card h3{margin:0 0 8px;font-size:16.5px;letter-spacing:-.01em;color:var(--ink)}
+.card p{margin:0;font-size:14px;color:var(--mut)}
+.card .tags{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:#FDEBE0;color:#D2500E}
+.tag.ok{background:#EAF9F0;color:var(--ok-ink)}
+.tag.warn{background:#fffbeb;color:var(--warn)}
+
+/* ---------- mermaid ---------- */
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:6px;text-align:center;overflow-x:auto;box-shadow:var(--shadow-card)}
+.diagram .mermaid{min-width:640px}
+
+/* ---------- terminal ---------- */
+.terminal{background:var(--term-bg);border-radius:16px;border:1px solid var(--term-line);overflow:hidden;box-shadow:0 18px 50px rgba(26,26,46,.35)}
+.term-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:#1E1E3A;border-bottom:1px solid var(--term-line)}
+.term-bar .d{width:11px;height:11px;border-radius:50%}
+.term-bar .d1{background:#f87171}.term-bar .d2{background:#fbbf24}.term-bar .d3{background:var(--ok)}
+.term-bar .title{margin-left:8px;font-family:var(--mono);font-size:12px;color:#6B7280}
+.terminal pre{margin:0;padding:20px 22px;font-size:12.6px;line-height:1.62;color:var(--term-ink);overflow-x:auto;white-space:pre;max-height:560px;overflow-y:auto}
+.term-cmd{color:var(--brand2)}
+.caption{font-size:13.5px;color:var(--mut);margin-top:12px;text-align:center;font-style:italic}
+
+/* ---------- playground ---------- */
+.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--line);width:fit-content}
+.tab{border:0;background:transparent;padding:10px 20px;margin-bottom:-2px;border-bottom:2px solid transparent;font-size:14px;font-weight:700;color:var(--mut);cursor:pointer;font-family:var(--sans)}
+.tab.active{color:var(--brand);border-bottom-color:var(--brand)}
+.pg-panel{display:none}
+.pg-panel.active{display:block}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.chip{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:9px 17px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:background .12s,border-color .12s;box-shadow:var(--shadow-card)}
+.chip:hover{background:#FFF4EE;border-color:#F8C6A4}
+.chip:disabled{opacity:.5;cursor:wait}
+.console{background:var(--term-bg);border:1px solid var(--term-line);border-radius:16px;min-height:280px;max-height:560px;overflow-y:auto;padding:18px 20px}
+.console .empty{color:#5A5F7A;font-family:var(--mono);font-size:13px;padding:20px 4px}
+.msg{margin:0 0 14px}
+.msg-user{color:#E7E9F2;font-weight:600;font-size:14px}
+.msg-user::before{content:"you ▸ ";color:var(--brand2);font-family:var(--mono);font-weight:400;font-size:12.5px}
+.msg-tool{font-family:var(--mono);font-size:12px;color:#A99BFF;margin:6px 0}
+.msg-summary{color:#A7EBC8;font-size:13.5px;margin:6px 0 8px}
+.msg-summary::before{content:"remi ▸ ";color:var(--ok);font-family:var(--mono);font-size:12.5px}
+.msg pre{background:#0E0E22;border:1px solid var(--term-line);border-radius:10px;padding:14px 16px;font-size:11.8px;line-height:1.55;color:var(--term-ink);overflow-x:auto;margin:0;max-height:340px;overflow-y:auto}
+.msg-err{color:#fca5a5;font-size:13.5px;font-family:var(--mono)}
+.live-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:9px;padding:10px 12px;font-size:13.5px;font-family:var(--mono);background:#fff;color:var(--ink)}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid #FBD5BB;border-color:var(--brand)}
+.field .hint{font-size:11.5px;color:var(--faint);margin-top:4px}
+.field-wide{grid-column:1/-1}
+.live-form textarea{min-height:120px;resize:vertical}
+.run-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.btn-run{background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(242,101,34,.35)}
+.btn-run:hover{background:var(--brand2)}
+.btn-run:disabled{opacity:.6;cursor:wait}
+.security-note{background:#EAF9F0;border:1px solid #BFEFD4;border-radius:12px;padding:12px 16px;font-size:13px;color:#14713F;margin-top:16px}
+.security-note b{color:#0E5B31}
+
+/* ---------- hosting ---------- */
+.cmd{position:relative;background:var(--term-bg);border-radius:10px;margin-top:auto;padding:12px 44px 12px 14px;font-family:var(--mono);font-size:12px;color:var(--term-green);overflow-x:auto;white-space:pre}
+.copy-btn{position:absolute;top:7px;right:7px;border:1px solid #3A3A5C;background:#232345;color:#9CA3AF;border-radius:7px;font-size:11px;padding:4px 9px;cursor:pointer;font-family:var(--mono)}
+.copy-btn:hover{color:#E7E9F2}
+.notice{background:#FFF4EE;border-left:4px solid var(--brand);border-radius:10px;padding:12px 16px;font-size:13.5px;color:#8A3A10;margin-top:20px}
+
+/* ---------- lybo ---------- */
+.lybo{background:linear-gradient(150deg,#16162B,#1A1A2E 55%,#232345);color:#fff;border-top:0 !important}
+.lybo .kicker{color:var(--brand2)}
+.lybo h2{color:#fff}
+.lybo .lead{color:#B8BDD3}
+.lybo .card{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.13);box-shadow:none}
+.lybo .card h3{color:#fff}
+.lybo .card p{color:#B8BDD3}
+.lybo .card .icon{background:rgba(242,101,34,.12);border-color:rgba(242,101,34,.3)}
+.lybo .tag{background:rgba(242,101,34,.18);color:#FDBA74}
+.lybo .flow{font-family:var(--mono);font-size:13px;color:#A9AFC6;background:rgba(14,14,34,.55);border:1px solid rgba(255,255,255,.11);border-radius:12px;padding:14px 18px;margin:22px 0;overflow-x:auto;white-space:nowrap}
+.lybo .flow b{color:#F97316;font-weight:600}
+
+/* ---------- footer ---------- */
+footer{background:#1A1A2E;color:#9CA3AF;font-size:13px;padding:34px 0;text-align:center;line-height:1.8;border-top:1px solid #26264A}
+footer .sep{margin:0 8px;color:#3A3A5C}
+footer a{color:#FDBA74}
+footer b{color:#fff}
+
+@media (max-width:640px){
+  .nav-links{display:none}
+  section{padding:48px 0}
+  .hero-strip{font-size:12px}
+  .diagram .mermaid{min-width:520px}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ 1. HERO ============ -->
+<header class="hero">
+  <div class="wrap">
+    <nav class="nav">
+      <span class="logo">Lybo<span class="ai">AI</span><span class="divider">/</span><span class="product"><b>Remi</b> × Pinch</span></span>
+      <span class="nav-links">
+        <a href="#built">What we built</a>
+        <a href="#how">How it works</a>
+        <a href="#blueprint">Blueprint</a>
+        <a href="#playground">Playground</a>
+        <a href="#hosting">Host it</a>
+      </span>
+    </nav>
+    <div class="hero-inner">
+      <p class="eyebrow">A LyboAI product</p>
+      <h1>Remi — the AI payments <span class="grad">teammate</span> for Pinch merchants</h1>
+      <p class="sub">Describe how you charge in plain English. A deterministic compiler builds it on Pinch, runs it, and fixes it when payments fail.</p>
+      <div class="badges">
+        <span class="badge"><span class="dot"></span>Built on the Pinch Payments API</span>
+        <span class="badge">First Pinch MCP</span>
+        <span class="badge">#PinchMeIWant50K</span>
+      </div>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#playground">Try the playground</a>
+        <a class="btn btn-ghost" href="#" data-todo="repo-url">Get the toolkit</a>
+      </div>
+      <div class="hero-strip">
+        <span><b>19</b> MCP tools</span>
+        <span><b>12</b> read · <b>7</b> guarded writes</span>
+        <span>stdio + Streamable HTTP</span>
+        <span>every write needs <b>confirm:true</b></span>
+        <span>sandbox-verified</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ 2. WHAT WE BUILT ============ -->
+<section id="built">
+  <div class="wrap">
+    <p class="kicker">What we built</p>
+    <h2>One payments core, four deliverables</h2>
+    <p class="lead">A 48-hour hackathon build: an unofficial community MCP server for the Pinch Payments API, an agent that uses it responsibly, a live reference integration, and everything packaged so any platform can do the same.</p>
+    <div class="grid grid-4">
+      <div class="card">
+        <div class="icon">🔌</div>
+        <h3>pinch-mcp</h3>
+        <p>A 19-tool MCP server over the Pinch API — payments, payers, subscriptions with stall detection, cashflow summaries, payer statements, split-bill tracking, and a dishonour-diagnosis map. stdio + Streamable HTTP. Every write is approval-gated: no <code>confirm:true</code>, no API call.</p>
+        <div class="tags"><span class="tag">12 read</span><span class="tag warn">7 guarded writes</span><span class="tag ok">confirm-guard</span></div>
+      </div>
+      <div class="card">
+        <div class="icon">🤖</div>
+        <h3>Remi agent</h3>
+        <p>The AI payments teammate: <b>Design</b> billing from plain English, <b>Do</b> collections (links, subscriptions, splits), <b>Ask</b> instant money questions, <b>Fix</b> failed payments with diagnosed causes and approved recoveries. Ships in three deployment shapes on LyboAI.</p>
+        <div class="tags"><span class="tag">Design</span><span class="tag">Do</span><span class="tag">Ask</span><span class="tag">Fix</span></div>
+      </div>
+      <div class="card">
+        <div class="icon">🏟️</div>
+        <h3>CoachPlus integration</h3>
+        <p>A live reference deployment: the Billing &amp; Payments panel with a cashflow digest and needs-attention feed, Pinch-powered collections (payment links, real recurring subscriptions, webhooks), and Remi embedded as the coach's payments front desk.</p>
+        <div class="tags"><span class="tag ok">live reference</span><span class="tag">Pinch collections</span></div>
+      </div>
+      <div class="card">
+        <div class="icon">🧰</div>
+        <h3>The Toolkit</h3>
+        <p>Everything packaged for reuse: the agent pack (system prompt, playbooks, dishonour taxonomy, guardrails), recipes for Claude Desktop / LyboAI / widget embeds, a sandbox seed script — and this playground.</p>
+        <div class="tags"><span class="tag">agent pack</span><span class="tag">recipes</span><span class="tag">playground</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3. HOW IT WORKS ============ -->
+<section id="how">
+  <div class="wrap">
+    <p class="kicker">How it works</p>
+    <h2>One MCP server, every host</h2>
+    <p class="lead">The Pinch API is wrapped once, in pinch-mcp. External AI hosts (Claude Desktop, Cursor — any MCP client) connect directly; LyboAI connects through its generic MCP bridge to power Remi; CoachPlus renders the result for merchants.</p>
+    <div class="diagram">
+      <div class="mermaid">
+flowchart LR
+  P["Pinch Payments API<br/>(sandbox)"] --> M{{"pinch-mcp<br/>19 tools · stdio + HTTP<br/>confirm-guarded writes"}}
+  M --> C1["Claude Desktop / Cursor<br/>(any MCP client)"]
+  M --> B["LyboAI MCP bridge<br/>(JSON-RPC · JSON + SSE)"]
+  B --> R[["Remi<br/>Design · Do · Ask · Fix"]]
+  P --> CP["CoachPlus pinch client<br/>+ webhooks"]
+  CP --> UI["Billing &amp; Payments panel<br/>/coach/payments"]
+  R -. chat / widget .-> UI
+      </div>
+    </div>
+    <div class="notice"><b>Approval lives in the tool layer.</b> Every write tool refuses to act without <code>confirm: true</code> and returns a structured preview instead — so no host, chat, flow or UI can move money without an explicit human step. Refunds carry an additional env-enforced cap.</div>
+  </div>
+</section>
+
+<!-- ============ 4. THE BLUEPRINT ============ -->
+<section id="blueprint">
+  <div class="wrap">
+    <p class="kicker">The blueprint</p>
+    <h2>A deterministic compiler for billing models</h2>
+    <p class="lead">This is real, live output from <code>pinch_design_billing</code> against the Pinch sandbox — a monthly membership, casual sessions, and a 10-week term with a deposit, under a 7% platform fee. Validation, Pinch-primitive mapping, schedules, indicative fees, timeline and review flags are all computed deterministically. Nothing is provisioned without <code>confirm:true</code>.</p>
+    <div class="terminal">
+      <div class="term-bar"><span class="d d1"></span><span class="d d2"></span><span class="d d3"></span><span class="title">pinch_design_billing — blueprintText (live sandbox output)</span></div>
+      <pre><span class="term-cmd">$ pinch_design_billing { businessName: "CoachPlus Demo Club", platformFeePercent: 7, confirm: false, components: [membership, per_session, term] }</span>
+
+BILLING BLUEPRINT — CoachPlus Demo Club
+Anchor date: 2026-07-25 · fee estimates are sandbox-observed, indicative — not official pricing
+
+1. Adult membership [membership] → Pinch Plan + Subscription (monthly, ongoing until cancelled)
+   $59.00 monthly from 2026-07-25, until cancelled
+   per charge: gross $59.00 · est Pinch fee $1.30 · platform fee $4.13 · est net $53.57
+   provisioning: event-driven · flags: 7% platform fee NOT applied automatically — see needsReview; no payerEmail — provision per customer as they sign up (see exampleCall)
+
+2. Casual session [per_session] → Payment link issued per booking (event-driven)
+   $30.00 per session, on demand — no fixed dates
+   per charge: gross $30.00 · est Pinch fee $0.66 · platform fee $2.10 · est net $27.24
+   provisioning: event-driven · flags: 7% platform fee NOT applied automatically — see needsReview; not auto-provisioned — issue a payment link at each booking (see exampleCall)
+
+3. U12 Spring skills term [term] → Pinch Plan + Subscription (weekly, ends after 10 payments, deposit via fixedPayments)
+   $50.00 deposit on 2026-07-25, then 10 × $45.00 weekly from 2026-08-01 to 2026-10-03 ($500.00 total)
+   per charge: gross $45.00 · est Pinch fee $0.99 · platform fee $3.15 · est net $40.86
+   provisioning: event-driven · flags: 7% platform fee NOT applied automatically — see needsReview; no payerEmail — provision per customer as they enrol (see exampleCall)
+
+TIMELINE (first events)
+   2026-07-25     $59.00  Adult membership — monthly charge
+   2026-07-25     $50.00  U12 Spring skills term — deposit
+   2026-08-01     $45.00  U12 Spring skills term — instalment
+   2026-08-08     $45.00  U12 Spring skills term — instalment
+   2026-08-15     $45.00  U12 Spring skills term — instalment
+   2026-08-22     $45.00  U12 Spring skills term — instalment
+
+FIRST 30 DAYS: gross $289.00 · est net $262.41 · recurring: $59.00/monthly, $45.00/weekly
+POLICY: Soft-failure retry after 3 days — matches the insufficient-funds playbook (retry ~3 days, friendly nudge, pause after 3 consecutive failures). Hard failures are never blind-retried: send a payment link to update details instead.
+NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / application fees — flagged for Pinch review; not auto-provisioned. Estimates above show the deduction for planning only.</pre>
+    </div>
+    <p class="caption">AI interprets intent. A deterministic, schema-validated compiler decides what Pinch operations are permitted.</p>
+  </div>
+</section>
+
+<!-- ============ 5. PLAYGROUND ============ -->
+<section id="playground">
+  <div class="wrap">
+    <p class="kicker">Playground</p>
+    <h2>Talk to the tools</h2>
+    <p class="lead">Demo mode replays real captured sandbox outputs — it works fully offline. Live mode speaks MCP Streamable HTTP straight from your browser to a pinch-mcp endpoint you run.</p>
+
+    <div class="tabs" role="tablist">
+      <button class="tab active" id="tab-demo" role="tab" aria-selected="true">Demo mode</button>
+      <button class="tab" id="tab-live" role="tab" aria-selected="false">Live mode</button>
+    </div>
+
+    <!-- Demo mode -->
+    <div class="pg-panel active" id="panel-demo">
+      <div class="chips">
+        <button class="chip" data-demo="cashflow">How did I do this week?</button>
+        <button class="chip" data-demo="failed">Any failed payments?</button>
+        <button class="chip" data-demo="split">Who owes on the studio rent split?</button>
+        <button class="chip" data-demo="blueprint">Design my billing</button>
+      </div>
+      <div class="console" id="demo-console">
+        <div class="empty"># pick a question above — every response below is a real capture from the Pinch sandbox (no network needed)</div>
+      </div>
+    </div>
+
+    <!-- Live mode -->
+    <div class="pg-panel" id="panel-live">
+      <div class="live-form">
+        <div class="field field-wide">
+          <label for="lv-endpoint">MCP endpoint URL</label>
+          <input id="lv-endpoint" type="url" value="http://localhost:3333/mcp" spellcheck="false"/>
+          <div class="hint">start yours with: <code>node dist/index.js --http 3333 --cors</code></div>
+        </div>
+        <div class="field">
+          <label for="lv-merchant">Merchant / Application ID</label>
+          <input id="lv-merchant" type="text" placeholder="mch_…" autocomplete="off" spellcheck="false"/>
+        </div>
+        <div class="field">
+          <label for="lv-secret">Secret Key</label>
+          <input id="lv-secret" type="password" placeholder="sk_…" autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label for="lv-env">Environment</label>
+          <select id="lv-env" disabled><option value="test" selected>test</option></select>
+          <div class="hint">locked — live is refused by the server on playgrounds</div>
+        </div>
+        <div class="field">
+          <label for="lv-tool">Tool</label>
+          <select id="lv-tool">
+            <option value="pinch_health">pinch_health</option>
+            <option value="pinch_cashflow_summary" selected>pinch_cashflow_summary</option>
+            <option value="pinch_list_failed_payments">pinch_list_failed_payments</option>
+            <option value="pinch_get_split_status">pinch_get_split_status</option>
+            <option value="pinch_design_billing">pinch_design_billing</option>
+          </select>
+        </div>
+        <div class="field field-wide">
+          <label for="lv-params">Params (JSON)</label>
+          <textarea id="lv-params" spellcheck="false"></textarea>
+        </div>
+      </div>
+      <div class="run-row">
+        <button class="btn btn-run" id="lv-run">Run tool</button>
+        <span style="font-size:13px;color:var(--mut)">initialize → notifications/initialized → tools/call, per the MCP Streamable HTTP spec</span>
+      </div>
+      <div class="console" id="live-console">
+        <div class="empty"># results appear here</div>
+      </div>
+      <div class="security-note"><b>Security:</b> credentials go directly from your browser to <b>YOUR</b> endpoint — never to us. This page has no backend. Test keys only.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 6. HOSTING ============ -->
+<section id="hosting">
+  <div class="wrap">
+    <p class="kicker">Host it for your platform</p>
+    <h2>Three deployment patterns</h2>
+    <p class="lead">pinch-mcp is an unofficial community MCP server for the Pinch Payments API. Your merchants, your keys — credentials are never shared or proxied by anyone else.</p>
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="icon">📦</div>
+        <h3>Per-platform instance</h3>
+        <p>One process per merchant or platform, credentials via env vars. The simplest and safest default — exactly what the Claude Desktop quickstart sets up.</p>
+        <div class="tags" style="margin-bottom:14px"><span class="tag ok">safest default</span></div>
+        <div class="cmd">PINCH_MERCHANT_ID=mch_… PINCH_SECRET_KEY=sk_… node dist/index.js<button class="copy-btn" data-copy="PINCH_MERCHANT_ID=mch_… PINCH_SECRET_KEY=sk_… node dist/index.js">copy</button></div>
+      </div>
+      <div class="card">
+        <div class="icon">🌐</div>
+        <h3>Shared multi-tenant endpoint</h3>
+        <p>One hosted process; each caller brings their own keys per request via <code>x-pinch-merchant-id</code> / <code>x-pinch-secret-key</code> / <code>x-pinch-env</code> headers. OAuth tokens cached per merchant+env, header secrets never logged, <code>--cors</code> answers browser preflights. Without <code>--allow-live</code>, the server refuses <code>x-pinch-env: live</code> outright.</p>
+        <div class="tags" style="margin-bottom:14px"><span class="tag">header creds</span><span class="tag warn">test-only by default</span></div>
+        <div class="cmd">node dist/index.js --http 8787 --cors<button class="copy-btn" data-copy="node dist/index.js --http 8787 --cors">copy</button></div>
+      </div>
+      <div class="card">
+        <div class="icon">🧩</div>
+        <h3>Library import</h3>
+        <p><code>buildServer()</code> is exported from the built module — embed the fully-wired MCP server, all 19 tools, inside your own Node process and connect whatever transport you like.</p>
+        <div class="tags" style="margin-bottom:14px"><span class="tag">embed anywhere</span></div>
+        <div class="cmd">const { buildServer } = await import("./dist/index.js")<button class="copy-btn" data-copy='const { buildServer } = await import("./dist/index.js")'>copy</button></div>
+      </div>
+    </div>
+    <div class="notice">Unofficial community MCP for the Pinch Payments API — not an official Pinch product. Merchants authorise it with their <b>own</b> API keys.</div>
+  </div>
+</section>
+
+<!-- ============ 7. LYBOAI ============ -->
+<section class="lybo" id="lyboai">
+  <div class="wrap">
+    <p class="kicker">Built on the LyboAI agents platform</p>
+    <h2>From chatbots to agents</h2>
+    <p class="lead">LyboAI's flow engine and knowledge grounding now compose with MCP tools and human approval gates: bots that <b>do</b> things — take payments, diagnose failures, act on approval — not just answer questions. The preview → approve → <code>confirm:true</code> loop maps directly onto the orchestrator's tool rounds.</p>
+    <div class="flow">merchant message → <b>flow engine</b> → knowledge grounding → <b>MCP tool call</b> (preview) → <b>human approval gate</b> → <b>confirm:true</b> → money moves</div>
+    <div class="grid grid-2">
+      <div class="card">
+        <div class="icon">💬</div>
+        <h3>payments-support</h3>
+        <p>Standalone Remi: a ready-to-instantiate template whose whole job is payments. Design billing conversationally, answer money questions from live Pinch data, triage dishonours and prepare recoveries — every write held for approval.</p>
+        <div class="tags"><span class="tag">standalone Remi</span><span class="tag">template</span></div>
+      </div>
+      <div class="card">
+        <div class="icon">🧭</div>
+        <h3>support-with-remi</h3>
+        <p>Your existing support agent, with Remi as its payments <i>workflow</i>: general questions stay with your bot; anything payments-shaped routes into Remi's Design/Do/Ask/Fix branch with identical guard language. The CoachPlus Support Agent model.</p>
+        <div class="tags"><span class="tag">your agent + Remi</span><span class="tag">workflow branch</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 8. FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    Built by <b>Rajan Dua</b> (LyboTech Group) for the Pinch <i>"Pinch Me, I Want 50K"</i> hackathon
+    <span class="sep">·</span> unofficial community project, not affiliated with Pinch Payments
+    <span class="sep">·</span> sandbox only
+  </div>
+</footer>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  securityLevel: "loose",
+  theme: "base",
+  themeVariables: {
+    primaryColor: "#FFF4EE",
+    primaryBorderColor: "#F26522",
+    primaryTextColor: "#1A1A2E",
+    secondaryColor: "#F7F8FC",
+    secondaryBorderColor: "#7C5CFC",
+    tertiaryColor: "#F7F8FC",
+    tertiaryBorderColor: "#E5E7EB",
+    lineColor: "#6B7280",
+    fontSize: "13px"
+  }
+});
+</script>
+
+<script>
+"use strict";
+/* ================= real captured sandbox outputs (see accuracy note in repo) ================= */
+var CAPTURES = {
+  "cashflow": {
+    "periodDays": 7,
+    "collected": {
+      "count": 1,
+      "totalCents": 60000,
+      "totalAud": "$600.00"
+    },
+    "dishonoured": {
+      "count": 1,
+      "totalCents": 5900,
+      "atRiskAud": "$59.00",
+      "truncatedDetails": false,
+      "items": [
+        {
+          "paymentId": "pmt_lOb1nrunAStqfs",
+          "payerName": "Demo #insufficient-funds Smoke",
+          "amountAud": "$59.00",
+          "dishonourType": "insufficient-funds",
+          "plainEnglish": "The customer's account didn't have enough money to cover the payment (a soft decline — the account itself is fine)."
+        }
+      ]
+    },
+    "scheduledNext7Days": {
+      "count": 7,
+      "totalCents": 41300,
+      "totalAud": "$413.00"
+    },
+    "scheduledNext30Days": {
+      "count": 7,
+      "totalCents": 41300,
+      "totalAud": "$413.00"
+    },
+    "topPayers": [
+      {
+        "payerId": "pyr_TckUuTKidGkw6P",
+        "name": "Priya Fitness",
+        "totalAud": "$600.00",
+        "totalCents": 60000
+      }
+    ],
+    "generatedAt": "2026-07-24T13:43:21.129Z"
+  },
+  "failed": {
+    "count": 1,
+    "totalAtRiskCents": 5900,
+    "totalAtRisk": "$59.00",
+    "truncated": false,
+    "truncatedDetails": false,
+    "failedPayments": [
+      {
+        "paymentId": "pmt_lOb1nrunAStqfs",
+        "status": "dishonoured",
+        "amountCents": 5900,
+        "amount": "$59.00",
+        "transactionDate": "2026-07-24T11:00:47.6994655Z",
+        "payer": {
+          "id": "pyr_nD3BkfgiiVSiNR",
+          "name": "Demo #insufficient-funds Smoke",
+          "email": "pinch-mcp-smoke+1784886992364@example.com"
+        },
+        "dishonour": {
+          "type": "insufficient-funds"
+        },
+        "diagnosis": {
+          "code": "insufficient-funds",
+          "plainEnglish": "The customer's account didn't have enough money to cover the payment (a soft decline — the account itself is fine).",
+          "ownership": "customer",
+          "recommendedAction": "Retry the payment in ~3 days (often after payday) and send the customer a friendly heads-up so the retry doesn't surprise them. Pause after 3 consecutive failures.",
+          "retryable": "soft"
+        }
+      }
+    ]
+  },
+  "split": {
+    "splitId": "spl_Bh8QfH0Rai",
+    "description": "August studio rent + utilities — Southbank studio",
+    "dueDate": "2026-08-07",
+    "totalCents": 120000,
+    "totalAud": "$1200.00",
+    "collectedCents": 60000,
+    "collectedAud": "$600.00",
+    "outstandingCents": 60000,
+    "outstandingAud": "$600.00",
+    "parties": [
+      {
+        "part": "1/3",
+        "name": "Priya Fitness",
+        "email": "priya@example.com",
+        "payerId": "pyr_TckUuTKidGkw6P",
+        "amountCents": 60000,
+        "amountAud": "$600.00",
+        "status": "paid",
+        "paidAt": null,
+        "daysOutstanding": null,
+        "linkId": "plk_0JEUcaqF0qjn2x",
+        "linkUrl": "https://pay.getpinch.com.au/pay/plk_0JEUcaqF0qjn2x"
+      },
+      {
+        "part": "2/3",
+        "name": "Marcus PT",
+        "email": "marcus@example.com",
+        "payerId": "pyr_9P7016270oKwNK",
+        "amountCents": 36000,
+        "amountAud": "$360.00",
+        "status": "pending",
+        "paidAt": null,
+        "daysOutstanding": 0,
+        "linkId": "plk_jtZ4G2ViAIxYEW",
+        "linkUrl": "https://pay.getpinch.com.au/pay/plk_jtZ4G2ViAIxYEW"
+      },
+      {
+        "part": "3/3",
+        "name": "Southside Strength",
+        "email": "southside@example.com",
+        "payerId": "pyr_Y7yqLOc2UOcQaN",
+        "amountCents": 24000,
+        "amountAud": "$240.00",
+        "status": "pending",
+        "paidAt": null,
+        "daysOutstanding": 0,
+        "linkId": "plk_FQea534piprKai",
+        "linkUrl": "https://pay.getpinch.com.au/pay/plk_FQea534piprKai"
+      }
+    ],
+    "exposure": {
+      "settledParties": 1,
+      "outstandingParties": 2,
+      "largestOutstanding": {
+        "name": "Marcus PT",
+        "amountAud": "$360.00",
+        "daysOutstanding": 0
+      },
+      "riskNote": "Marcus PT still owes $360.00 for 0 days — $600.00 of the bill is being carried by whoever fronted it."
+    },
+    "suggestedActions": [
+      "Chase Marcus PT (marcus@example.com) for $360.00 — resend their link: https://pay.getpinch.com.au/pay/plk_jtZ4G2ViAIxYEW",
+      "Chase Southside Strength (southside@example.com) for $240.00 — resend their link: https://pay.getpinch.com.au/pay/plk_FQea534piprKai"
+    ],
+    "truncated": false,
+    "truncatedDetails": false,
+    "generatedAt": "2026-07-24T13:43:22.107Z"
+  },
+  "blueprint": {
+    "blueprint": {
+      "businessName": "CoachPlus Demo Club",
+      "components": [
+        {
+          "name": "Adult membership",
+          "kind": "membership",
+          "mapsTo": "Pinch Plan + Subscription (monthly, ongoing until cancelled)",
+          "schedule": {
+            "summary": "$59.00 monthly from 2026-07-25, until cancelled",
+            "firstEvents": [
+              {
+                "date": "2026-07-25",
+                "amountAud": "$59.00",
+                "description": "monthly charge"
+              },
+              {
+                "date": "2026-08-25",
+                "amountAud": "$59.00",
+                "description": "monthly charge"
+              }
+            ]
+          },
+          "money": {
+            "gross": {
+              "cents": 5900,
+              "aud": "$59.00"
+            },
+            "estPinchFee": {
+              "cents": 130,
+              "aud": "$1.30",
+              "basis": "sandbox-observed, indicative"
+            },
+            "platformFee": {
+              "cents": 413,
+              "aud": "$4.13"
+            },
+            "estNet": {
+              "cents": 5357,
+              "aud": "$53.57"
+            }
+          },
+          "provisioning": "event-driven",
+          "flags": [
+            "7% platform fee NOT applied automatically — see needsReview",
+            "no payerEmail — provision per customer as they sign up (see exampleCall)"
+          ],
+          "exampleCall": {
+            "tool": "pinch_create_subscription",
+            "params": {
+              "payerEmail": "customer@example.com",
+              "amountCents": 5900,
+              "interval": "monthly",
+              "description": "Adult membership",
+              "confirm": true
+            }
+          }
+        },
+        {
+          "name": "Casual session",
+          "kind": "per_session",
+          "mapsTo": "Payment link issued per booking (event-driven)",
+          "schedule": {
+            "summary": "$30.00 per session, on demand — no fixed dates",
+            "firstEvents": []
+          },
+          "money": {
+            "gross": {
+              "cents": 3000,
+              "aud": "$30.00"
+            },
+            "estPinchFee": {
+              "cents": 66,
+              "aud": "$0.66",
+              "basis": "sandbox-observed, indicative"
+            },
+            "platformFee": {
+              "cents": 210,
+              "aud": "$2.10"
+            },
+            "estNet": {
+              "cents": 2724,
+              "aud": "$27.24"
+            }
+          },
+          "provisioning": "event-driven",
+          "flags": [
+            "7% platform fee NOT applied automatically — see needsReview",
+            "not auto-provisioned — issue a payment link at each booking (see exampleCall)"
+          ],
+          "exampleCall": {
+            "tool": "pinch_create_payment_link",
+            "params": {
+              "amountCents": 3000,
+              "description": "Casual session",
+              "payerEmail": "customer@example.com",
+              "confirm": true
+            }
+          }
+        },
+        {
+          "name": "U12 Spring skills term",
+          "kind": "term",
+          "mapsTo": "Pinch Plan + Subscription (weekly, ends after 10 payments, deposit via fixedPayments)",
+          "schedule": {
+            "summary": "$50.00 deposit on 2026-07-25, then 10 × $45.00 weekly from 2026-08-01 to 2026-10-03 ($500.00 total)",
+            "firstEvents": [
+              {
+                "date": "2026-07-25",
+                "amountAud": "$50.00",
+                "description": "deposit"
+              },
+              {
+                "date": "2026-08-01",
+                "amountAud": "$45.00",
+                "description": "instalment"
+              },
+              {
+                "date": "2026-08-08",
+                "amountAud": "$45.00",
+                "description": "instalment"
+              },
+              {
+                "date": "2026-08-15",
+                "amountAud": "$45.00",
+                "description": "instalment"
+              }
+            ]
+          },
+          "money": {
+            "gross": {
+              "cents": 4500,
+              "aud": "$45.00"
+            },
+            "estPinchFee": {
+              "cents": 99,
+              "aud": "$0.99",
+              "basis": "sandbox-observed, indicative"
+            },
+            "platformFee": {
+              "cents": 315,
+              "aud": "$3.15"
+            },
+            "estNet": {
+              "cents": 4086,
+              "aud": "$40.86"
+            }
+          },
+          "provisioning": "event-driven",
+          "flags": [
+            "7% platform fee NOT applied automatically — see needsReview",
+            "no payerEmail — provision per customer as they enrol (see exampleCall)"
+          ],
+          "exampleCall": {
+            "tool": "pinch_create_subscription",
+            "params": {
+              "payerEmail": "customer@example.com",
+              "amountCents": 4500,
+              "interval": "weekly",
+              "description": "U12 Spring skills term",
+              "termPayments": 10,
+              "depositCents": 5000,
+              "confirm": true
+            }
+          }
+        }
+      ],
+      "timeline": [
+        {
+          "date": "2026-07-25",
+          "componentName": "Adult membership",
+          "description": "monthly charge",
+          "amountAud": "$59.00"
+        },
+        {
+          "date": "2026-07-25",
+          "componentName": "U12 Spring skills term",
+          "description": "deposit",
+          "amountAud": "$50.00"
+        },
+        {
+          "date": "2026-08-01",
+          "componentName": "U12 Spring skills term",
+          "description": "instalment",
+          "amountAud": "$45.00"
+        },
+        {
+          "date": "2026-08-08",
+          "componentName": "U12 Spring skills term",
+          "description": "instalment",
+          "amountAud": "$45.00"
+        },
+        {
+          "date": "2026-08-15",
+          "componentName": "U12 Spring skills term",
+          "description": "instalment",
+          "amountAud": "$45.00"
+        },
+        {
+          "date": "2026-08-22",
+          "componentName": "U12 Spring skills term",
+          "description": "instalment",
+          "amountAud": "$45.00"
+        }
+      ],
+      "totals": {
+        "perInterval": [
+          {
+            "interval": "monthly",
+            "components": 1,
+            "grossCents": 5900,
+            "grossAud": "$59.00"
+          },
+          {
+            "interval": "weekly",
+            "components": 1,
+            "grossCents": 4500,
+            "grossAud": "$45.00"
+          }
+        ],
+        "firstMonthGrossCents": 28900,
+        "firstMonthGrossAud": "$289.00",
+        "estFirstMonthNetCents": 26241,
+        "estFirstMonthNetAud": "$262.41",
+        "feeBasis": "sandbox-observed, indicative"
+      },
+      "policyNotes": [
+        "Soft-failure retry after 3 days — matches the insufficient-funds playbook (retry ~3 days, friendly nudge, pause after 3 consecutive failures). Hard failures are never blind-retried: send a payment link to update details instead."
+      ],
+      "needsReview": [
+        "Platform fee retention (7%) requires Pinch Managed Merchants / application fees — flagged for Pinch review; not auto-provisioned. Estimates above show the deduction for planning only."
+      ],
+      "unsupported": []
+    },
+    "blueprintText": "(full text rendered verbatim in “The Blueprint” section above)",
+    "note": "Blueprint only — nothing was created. Re-call with confirm:true to provision the provisionable-now components (event-driven ones always stay manual; see each component's exampleCall)."
+  }
+};
+
+var DEMOS = {
+  cashflow: {
+    question: "How did I do this week?",
+    tool: "pinch_cashflow_summary",
+    args: { days: 7 },
+    summary: "This week you collected $600.00 (1 payment). $59.00 is dishonoured — 1 payment at risk — and $413.00 is scheduled over the next 7 days. Top payer: Priya Fitness ($600.00).",
+    data: CAPTURES.cashflow
+  },
+  failed: {
+    question: "Any failed payments?",
+    tool: "pinch_list_failed_payments",
+    args: {},
+    summary: "One failed payment: $59.00 — insufficient funds. Soft decline, customer-side; the account itself is fine. Recommended: retry in ~3 days (often after payday) with a friendly heads-up.",
+    data: CAPTURES.failed
+  },
+  split: {
+    question: "Who owes on the studio rent split?",
+    tool: "pinch_get_split_status",
+    args: { splitId: "spl_Bh8QfH0Rai" },
+    summary: "August studio rent + utilities ($1,200.00) is half collected. Priya Fitness paid $600.00; Marcus PT still owes $360.00 and Southside Strength $240.00 — chase-up links are ready.",
+    data: CAPTURES.split
+  },
+  blueprint: {
+    question: "Design my billing",
+    tool: "pinch_design_billing",
+    args: {
+      businessName: "CoachPlus Demo Club",
+      platformFeePercent: 7,
+      components: [
+        { kind: "membership", name: "Adult membership", amountCents: 5900, interval: "monthly" },
+        { kind: "per_session", name: "Casual session", amountCents: 3000 },
+        { kind: "term", name: "U12 Spring skills term", amountCents: 4500, interval: "weekly", termPayments: 10, depositCents: 5000 }
+      ],
+      confirm: false
+    },
+    summary: "Blueprint compiled for CoachPlus Demo Club: 3 components, first 30 days gross $289.00 (est net $262.41). The 7% platform fee is flagged NEEDS REVIEW and nothing was provisioned — confirm:true would create only the provisionable-now subset.",
+    data: CAPTURES.blueprint
+  }
+};
+
+function el(tag, cls, text) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function pretty(value) {
+  if (typeof value === "string") {
+    try { return JSON.stringify(JSON.parse(value), null, 2); } catch (e) { return value; }
+  }
+  return JSON.stringify(value, null, 2);
+}
+function clearEmpty(consoleEl) {
+  var empty = consoleEl.querySelector(".empty");
+  if (empty) empty.remove();
+}
+function appendExchange(consoleEl, question, toolLine, summary, payloadText, isError) {
+  clearEmpty(consoleEl);
+  var m = el("div", "msg");
+  if (question) m.appendChild(el("div", "msg-user", question));
+  if (toolLine) m.appendChild(el("div", "msg-tool", toolLine));
+  if (summary) m.appendChild(el("div", isError ? "msg-err" : "msg-summary", summary));
+  if (payloadText) {
+    var pre = el("pre");
+    pre.textContent = payloadText;
+    m.appendChild(pre);
+  }
+  consoleEl.appendChild(m);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+}
+
+/* ---------------- tabs ---------------- */
+var tabDemo = document.getElementById("tab-demo");
+var tabLive = document.getElementById("tab-live");
+var panelDemo = document.getElementById("panel-demo");
+var panelLive = document.getElementById("panel-live");
+function selectTab(which) {
+  var demo = which === "demo";
+  tabDemo.classList.toggle("active", demo);
+  tabLive.classList.toggle("active", !demo);
+  tabDemo.setAttribute("aria-selected", String(demo));
+  tabLive.setAttribute("aria-selected", String(!demo));
+  panelDemo.classList.toggle("active", demo);
+  panelLive.classList.toggle("active", !demo);
+}
+tabDemo.addEventListener("click", function () { selectTab("demo"); });
+tabLive.addEventListener("click", function () { selectTab("live"); });
+
+/* ---------------- demo mode ---------------- */
+var demoConsole = document.getElementById("demo-console");
+document.querySelectorAll(".chip[data-demo]").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var d = DEMOS[btn.getAttribute("data-demo")];
+    if (!d) return;
+    appendExchange(
+      demoConsole,
+      d.question,
+      "→ tools/call " + d.tool + " " + JSON.stringify(d.args),
+      d.summary,
+      pretty(d.data),
+      false
+    );
+  });
+});
+
+/* ---------------- live mode: MCP Streamable HTTP client ---------------- */
+var TOOL_PARAM_PRESETS = {
+  pinch_health: "{}",
+  pinch_cashflow_summary: JSON.stringify({ days: 7 }, null, 2),
+  pinch_list_failed_payments: "{}",
+  pinch_get_split_status: JSON.stringify({ splitId: "spl_Bh8QfH0Rai" }, null, 2),
+  pinch_design_billing: JSON.stringify(DEMOS.blueprint.args, null, 2)
+};
+var toolSelect = document.getElementById("lv-tool");
+var paramsBox = document.getElementById("lv-params");
+function applyPreset() { paramsBox.value = TOOL_PARAM_PRESETS[toolSelect.value] || "{}"; }
+toolSelect.addEventListener("change", applyPreset);
+applyPreset();
+
+var rpcId = 0;
+function parseRpcBody(text, contentType) {
+  // Streamable HTTP responses may be plain JSON or an SSE stream of `data:` lines.
+  var messages = [];
+  var looksSse = (contentType && contentType.indexOf("text/event-stream") !== -1) || /^\s*(data|event|id):/m.test(text);
+  if (looksSse) {
+    text.split(/\r?\n/).forEach(function (line) {
+      if (line.slice(0, 5) === "data:") {
+        var payload = line.slice(5).trim();
+        if (!payload) return;
+        try { messages.push(JSON.parse(payload)); } catch (e) { /* ignore non-JSON data lines */ }
+      }
+    });
+  } else if (text && text.trim()) {
+    try {
+      var parsed = JSON.parse(text);
+      messages = Array.isArray(parsed) ? parsed : [parsed];
+    } catch (e) { /* empty or non-JSON body (e.g. 202 Accepted) */ }
+  }
+  return messages;
+}
+
+function mcpPost(endpoint, headers, body) {
+  return fetch(endpoint, {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(body)
+  }).then(function (res) {
+    return res.text().then(function (text) {
+      var msgs = parseRpcBody(text, res.headers.get("content-type") || "");
+      if (!res.ok && msgs.length === 0) {
+        throw new Error("HTTP " + res.status + " from endpoint" + (text ? ": " + text.slice(0, 300) : ""));
+      }
+      return msgs;
+    });
+  });
+}
+
+function findResponse(messages, id) {
+  for (var i = 0; i < messages.length; i++) {
+    if (messages[i] && messages[i].id === id && (messages[i].result !== undefined || messages[i].error !== undefined)) return messages[i];
+  }
+  return null;
+}
+
+var runBtn = document.getElementById("lv-run");
+var liveConsole = document.getElementById("live-console");
+
+runBtn.addEventListener("click", function () {
+  var endpoint = document.getElementById("lv-endpoint").value.trim();
+  var merchantId = document.getElementById("lv-merchant").value.trim();
+  var secretKey = document.getElementById("lv-secret").value.trim();
+  var tool = toolSelect.value;
+
+  var args;
+  try {
+    args = paramsBox.value.trim() ? JSON.parse(paramsBox.value) : {};
+  } catch (e) {
+    appendExchange(liveConsole, null, null, "Params is not valid JSON: " + e.message, null, true);
+    return;
+  }
+  if (!endpoint) {
+    appendExchange(liveConsole, null, null, "Enter an MCP endpoint URL first.", null, true);
+    return;
+  }
+
+  var headers = {
+    "content-type": "application/json",
+    "accept": "application/json, text/event-stream",
+    "x-pinch-env": "test"
+  };
+  if (merchantId) headers["x-pinch-merchant-id"] = merchantId;
+  if (secretKey) headers["x-pinch-secret-key"] = secretKey;
+
+  runBtn.disabled = true;
+  runBtn.textContent = "Running…";
+  appendExchange(liveConsole, "Run " + tool, "→ POST " + endpoint + "  (initialize → notifications/initialized → tools/call)", null, null, false);
+
+  var initId = ++rpcId;
+  mcpPost(endpoint, headers, {
+    jsonrpc: "2.0", id: initId, method: "initialize",
+    params: {
+      protocolVersion: "2024-11-05",
+      capabilities: {},
+      clientInfo: { name: "remi-playground", version: "1.0.0" }
+    }
+  }).then(function (msgs) {
+    var init = findResponse(msgs, initId);
+    if (init && init.error) throw new Error("initialize failed: " + JSON.stringify(init.error));
+    // fire-and-forget per spec; a 202/empty body is the normal reply
+    return mcpPost(endpoint, headers, { jsonrpc: "2.0", method: "notifications/initialized" }).catch(function () { return []; });
+  }).then(function () {
+    var callId = ++rpcId;
+    return mcpPost(endpoint, headers, {
+      jsonrpc: "2.0", id: callId, method: "tools/call",
+      params: { name: tool, arguments: args }
+    }).then(function (msgs) {
+      var resp = findResponse(msgs, callId);
+      if (!resp) throw new Error("No JSON-RPC response found in the endpoint's reply.");
+      if (resp.error) throw new Error("Tool error: " + (resp.error.message || JSON.stringify(resp.error)));
+      var content = (resp.result && resp.result.content) || [];
+      var texts = content.filter(function (c) { return c && c.type === "text"; })
+                         .map(function (c) { return pretty(c.text); });
+      var isErr = !!(resp.result && resp.result.isError);
+      appendExchange(
+        liveConsole, null, null,
+        isErr ? "Tool returned an error result:" : "Result from " + tool + ":",
+        texts.join("\n\n") || JSON.stringify(resp.result, null, 2),
+        isErr
+      );
+    });
+  }).catch(function (err) {
+    var msg = String(err && err.message || err);
+    if (err instanceof TypeError || /Failed to fetch|NetworkError|Load failed/i.test(msg)) {
+      msg = "Could not reach the endpoint (network/CORS). If it's local, start the server with: node dist/index.js --http 3333 --cors — and check the URL ends in /mcp.";
+    }
+    appendExchange(liveConsole, null, null, msg, null, true);
+  }).finally(function () {
+    runBtn.disabled = false;
+    runBtn.textContent = "Run tool";
+  });
+});
+
+/* ---------------- copy buttons ---------------- */
+document.querySelectorAll(".copy-btn").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    var text = btn.getAttribute("data-copy") || "";
+    function done() { btn.textContent = "copied"; setTimeout(function () { btn.textContent = "copy"; }, 1400); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, done);
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+      done();
+    }
+  });
+});
+</script>
+</body>
+</html>

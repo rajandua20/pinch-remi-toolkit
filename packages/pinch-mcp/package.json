@@ -1,0 +1,42 @@
+{
+  "name": "@pinch-remi/pinch-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for the Pinch Payments API (Australia) — read tools, guarded write tools, and a dishonour-diagnosis map for AI payments agents.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "pinch-mcp": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "README.md",
+    ".env.example"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "smoke": "tsx src/smoke.ts"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "pinch",
+    "payments",
+    "australia",
+    "direct-debit"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.1",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  }
+}
