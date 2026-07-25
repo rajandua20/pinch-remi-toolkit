@@ -17,6 +17,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { PinchClient, PinchApiError, formatAud, centsToAud } from "./pinch-client.js";
 import { diagnoseDishonour, DISHONOUR_MAP } from "./dishonour-map.js";
+import * as QRCode from "qrcode";
 
 // ---------------------------------------------------------------------------
 // Shared result helpers
@@ -65,6 +66,28 @@ function previewResult(wouldDo: string, params: unknown): CallToolResult {
     params,
     note: "Re-call with confirm:true after human approval",
   });
+}
+
+/** Merge an optional vendor-notification tag into a payment-link metadata
+ * string (JSON preferred). The MCP server does not send outbound notifications
+ * (egress is restricted to Pinch) — it tags the link so the HOST (e.g. the
+ * CoachPlus webhook on payment completion) can notify the vendor. */
+function buildQrMetadata(
+  metadata: string | undefined,
+  vendorTag: { vendorEmail: string; vendorName?: string } | undefined,
+): string | undefined {
+  if (!vendorTag) return metadata;
+  let base: Record<string, unknown> = {};
+  if (metadata) {
+    try {
+      const parsed = JSON.parse(metadata);
+      base = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : { note: metadata };
+    } catch {
+      base = { note: metadata };
+    }
+  }
+  base.vendorNotify = vendorTag;
+  return JSON.stringify(base);
 }
 
 /** Wrap a tool handler so API/config errors surface as structured MCP errors. */
@@ -2196,6 +2219,138 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
           "Send this URL to the customer — paying it also stores their new payment method. On completion they are " +
           "redirected to returnUrl with ?paymentLinkId=&paymentId= appended; any metadata is copied onto the Payment.",
       });
+    }),
+  );
+
+  reg(
+    track("pinch_create_payment_qr"),
+    {
+      title: "Create payment QR (guarded)",
+      description:
+        "Create a Pinch hosted payment link for a payer AND render it as a scannable QR code — show it on a screen " +
+        "or print it, the customer scans and pays on Pinch's hosted page (card or bank). Identify the payer by " +
+        "payerEmail (looked up, or created if new) or payerId. Optionally pass vendorEmail/vendorName to TAG the link " +
+        "so the business is notified when it is paid — delivery is host-side (this server never sends outbound mail; " +
+        "egress is restricted to Pinch). Returns the link URL, a PNG QR image, and the vendor-notification tag. " +
+        "GUARDED: without confirm:true this only returns a preview and creates nothing.",
+      inputSchema: {
+        amountCents: z.number().int().positive().describe("Amount in integer cents (AUD), e.g. 5900 = $59.00"),
+        description: z.string().min(1).max(999).describe("Description shown to the payer on the checkout page"),
+        payerEmail: z
+          .string()
+          .email()
+          .optional()
+          .describe("Payer email — existing payer matched by email, otherwise a new payer is created"),
+        payerId: z.string().optional().describe("Existing payer id (pyr_...) — skips the email lookup"),
+        vendorEmail: z
+          .string()
+          .email()
+          .optional()
+          .describe("Business/vendor email to notify when this is paid (tagged in metadata; delivered host-side, not by this server)"),
+        vendorName: z.string().max(120).optional().describe("Business/vendor display name for the notification"),
+        allowedPaymentMethods: z
+          .array(z.enum(["credit-card", "bank-account"]))
+          .min(1)
+          .optional()
+          .describe('Payment methods offered on the checkout page (default ["credit-card","bank-account"]).'),
+        metadata: z
+          .string()
+          .optional()
+          .describe("Free text (JSON preferred) passed through to the resulting Payment object — use for correlation ids"),
+        confirm: confirmParam,
+      },
+    },
+    safe(async ({ amountCents, description, payerEmail, payerId, vendorEmail, vendorName, allowedPaymentMethods, metadata, confirm }) => {
+      if (!payerEmail && !payerId) {
+        return errorResult("Provide payerEmail or payerId — Pinch payment links are always tied to a payer.");
+      }
+      const methods = allowedPaymentMethods ?? ["credit-card", "bank-account"];
+      const vendorTag = vendorEmail ? { vendorEmail, ...(vendorName ? { vendorName } : {}) } : undefined;
+      const mergedMetadata = buildQrMetadata(metadata, vendorTag);
+
+      if (confirm !== true) {
+        return previewResult(
+          `Create a payment QR for ${formatAud(amountCents)} (“${description}”) addressed to ${payerId ?? payerEmail}` +
+            (vendorEmail ? `, notifying ${vendorEmail} when paid` : "") +
+            ". A scannable QR of the hosted link is returned on confirm.",
+          {
+            amountCents,
+            amount: formatAud(amountCents),
+            description,
+            payerEmail,
+            payerId,
+            allowedPaymentMethods: methods,
+            vendorNotification: vendorTag ?? null,
+            metadata: mergedMetadata ?? null,
+          },
+        );
+      }
+
+      const client = getClient();
+
+      // Resolve (or create) the payer — same behaviour as create_payment_link.
+      let resolvedPayerId = payerId;
+      let payerCreated = false;
+      if (!resolvedPayerId && payerEmail) {
+        const { items } = await client.getAllPages<AnyRecord>("/payers", { filter: payerEmail });
+        const match = items.find((p) => (p.emailAddress ?? "").toLowerCase() === payerEmail.toLowerCase());
+        if (match) {
+          resolvedPayerId = match.id;
+        } else {
+          const created = await client.post<AnyRecord>("/payers", {
+            firstName: payerEmail.split("@")[0] || "Customer",
+            emailAddress: payerEmail,
+          });
+          resolvedPayerId = created.id;
+          payerCreated = true;
+        }
+      }
+
+      const link = await client.post<AnyRecord>("/payment-links", {
+        payerId: resolvedPayerId,
+        amount: amountCents,
+        description,
+        allowedPaymentMethods: methods,
+        returnUrl: process.env.PINCH_RETURN_URL ?? "https://getpinch.com.au",
+        ...(mergedMetadata !== undefined ? { metadata: mergedMetadata } : {}),
+      });
+
+      // Render the hosted link URL as a PNG QR (data URL -> base64 image block).
+      const url = String(link.url ?? "");
+      let qrBase64 = "";
+      if (url) {
+        const dataUrl = await QRCode.toDataURL(url, { margin: 1, width: 320, errorCorrectionLevel: "M" });
+        qrBase64 = dataUrl.includes(",") ? dataUrl.slice(dataUrl.indexOf(",") + 1) : "";
+      }
+
+      const payload = {
+        created: true,
+        paymentLinkId: link.id,
+        url,
+        amountCents,
+        amount: formatAud(amountCents),
+        payerId: resolvedPayerId,
+        payerCreated,
+        allowedPaymentMethods: methods,
+        qrPresent: Boolean(qrBase64),
+        vendorNotification: vendorTag
+          ? {
+              to: vendorEmail,
+              vendorName: vendorName ?? null,
+              onEvent: "payment.completed",
+              message: `A payment of ${formatAud(amountCents)} for “${description}” was requested via QR. You will be notified when it is paid.`,
+              deliveredBy:
+                "host (e.g. the CoachPlus Pinch webhook on payment completion) — this MCP server sends no outbound mail",
+            }
+          : null,
+        note:
+          "Show the QR image (below) or share the URL — paying it also stores the customer's payment method. The " +
+          "vendor is notified host-side from the metadata tag when the payment completes.",
+      };
+
+      const content: CallToolResult["content"] = [{ type: "text", text: JSON.stringify(payload, null, 2) }];
+      if (qrBase64) content.push({ type: "image", data: qrBase64, mimeType: "image/png" });
+      return { content };
     }),
   );
 

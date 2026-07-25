@@ -33,9 +33,16 @@ Point consumers at it:
 **Alternatives (equally fine, faster to set up):** Railway / Render / Fly.io —
 point them at this Dockerfile, expose the PORT they inject, done.
 
-## B. Per-platform single-tenant instance
+## B. Per-platform single-tenant instance (demo-tenant-only fallback)
 
-Same image, credentials baked as env (one deployment per platform):
+**Not the default under the BYO-keys model.** Each coaching business registers on
+Pinch with its own app and brings its own keys — on CoachPlus via
+`coachSecrets/{tenantId}`, on LyboAI via the org's MCP connection (pattern A). This
+baked-credentials deployment is a **fallback for a single demo tenant** that has no
+connected keys of its own and runs on the platform's env creds (the tenant
+allowlisted by `PINCH_DEMO_TENANT_ID`). Do not stand one of these up per business.
+
+Same image, credentials baked as env (one deployment for that one demo tenant):
 ```bash
 gcloud run deploy pinch-mcp-coachplus \
   --source . --region australia-southeast1 --no-allow-unauthenticated \

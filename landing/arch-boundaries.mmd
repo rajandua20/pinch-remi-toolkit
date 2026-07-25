@@ -1,0 +1,44 @@
+flowchart TB
+  classDef pci fill:#FFF1E9,stroke:#F26522,stroke-width:2px,color:#8A3A10
+  classDef agent fill:#EEF2FF,stroke:#4F46E5,stroke-width:1.5px,color:#312E81
+  classDef ctrl fill:#F3EFFF,stroke:#7C5CFC,stroke-width:1.5px,color:#3F2E7E
+  classDef dlp fill:#ECFDF5,stroke:#1E9E5A,stroke-width:1.5px,color:#12603A
+  classDef next fill:#F3EFFF,stroke:#7C5CFC,stroke-width:1.5px,stroke-dasharray:5 4,color:#3F2E7E
+  classDef never fill:#FEF2F2,stroke:#DC2626,stroke-width:1.5px,stroke-dasharray:5 4,color:#991B1B
+  classDef plain fill:#FFFFFF,stroke:#D8DAE5,color:#1A1A2E
+
+  subgraph CAP["Payer's browser — where payment details are captured"]
+    direction TB
+    P1["Payer opens a Pinch-hosted<br/>setup or payment link"]:::plain
+    P2["Pinch CaptureJS or Pinch-hosted page<br/>the card and bank fields belong to Pinch"]:::pci
+    P1 --> P2
+  end
+
+  subgraph ST["LyboAI Studio — agent plane"]
+    direction TB
+    O["Operator, in natural language"]:::plain
+    D1["PIPELINE · Inbound redaction<br/>remove · tokenise · mask"]:::next
+    M["Model context"]:::agent
+    D2["PIPELINE · Outbound redaction"]:::next
+    N1["Never present in this plane<br/>PAN · BSB · account number · CVV · PIN<br/>Pinch secret key · OAuth token"]:::never
+    O --> D1 --> M --> D2
+  end
+
+  subgraph MC["pinch-mcp — constrained financial control plane"]
+    direction TB
+    Z["Zod schema validation,<br/>every argument"]:::ctrl
+    G["confirm:true guard, enforced in the<br/>tool handler and not in prompt text"]:::ctrl
+    T["22 narrow tools · no generic call_api<br/>no card or bank field in any schema"]:::ctrl
+    N2["Never accepted as a tool argument<br/>PAN · BSB · account number · CVV · PIN"]:::never
+    Z --> G --> T
+  end
+
+  PINCH["Pinch — the only plane that holds payment credentials<br/>tokenisation and vault: PAN · BSB · account number · CVV<br/>api.getpinch.com.au"]:::pci
+  R1["Bounded output, 200 kB cap<br/>no parameters or results logged"]:::dlp
+  R2["PIPELINE · Response redaction scan"]:::next
+  UI["Token reference · source type · last four · status<br/>returned to the model, then to the operator"]:::plain
+
+  P2 ==>|"credentials travel browser to Pinch, direct"| PINCH
+  D2 -->|"intent plus tokenised references only"| Z
+  T -->|"OAuth2 client credentials, per-request secret<br/>token cached in memory, 55 minutes"| PINCH
+  PINCH --> R1 --> R2 --> UI

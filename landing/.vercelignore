@@ -1,0 +1,5 @@
+# Build sources — never serve these. index.html is the finished, deployable file;
+# index.template.html still contains __CAPTURES_JSON__ / __BLUEPRINT_TEXT__ tokens
+# and will throw "__CAPTURES_JSON__ is not defined" if opened in a browser.
+index.template.html
+*.mmd

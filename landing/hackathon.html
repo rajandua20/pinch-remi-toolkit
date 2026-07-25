@@ -41,11 +41,31 @@ section.alt{background:var(--bg)}
 .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
 .logo-word{font-weight:700;font-size:20px;letter-spacing:-.02em;color:#1e293b}
 .logo-word .ai{color:#4f46e5}
-.nav-links{display:flex;gap:28px;font-size:14.5px;font-weight:500}
-.nav-links a{color:var(--ink);text-decoration:none;position:relative;padding:23px 0}
-.nav-links a:hover{color:var(--brand)}
-.nav-links a.active{color:var(--brand);font-weight:700}
-.nav-links a.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--brand);border-radius:2px 2px 0 0}
+.nav-menu{display:flex;align-items:center;gap:2px}
+.nav-item{display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:14.5px;font-weight:600;color:var(--ink);background:none;border:0;cursor:pointer;padding:9px 13px;border-radius:10px;text-decoration:none;line-height:1.2;white-space:nowrap;transition:background .12s ease,color .12s ease}
+.nav-item:hover{background:#F1F2F7;color:var(--brand)}
+.nav-item .chev{width:12px;height:12px;opacity:.5;flex:none;transition:transform .18s ease}
+.nav-group{position:relative}
+.nav-group.open>.nav-item,.nav-item.active{background:#F1F2F7;color:var(--brand)}
+.nav-group.open>.nav-item .chev{transform:rotate(180deg)}
+.nav-panel{position:absolute;top:calc(100% + 12px);left:0;min-width:268px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow-lift);padding:8px;display:none;flex-direction:column;gap:1px}
+.nav-group.open>.nav-panel{display:flex}
+.nav-panel a{display:block;text-decoration:none;color:var(--ink);font-size:14px;font-weight:600;padding:9px 11px;border-radius:9px;line-height:1.3;transition:background .12s ease,color .12s ease}
+.nav-panel a small{display:block;font-size:12px;font-weight:400;color:var(--faint);margin-top:2px;line-height:1.35}
+.nav-panel a:hover{background:#F7F8FC;color:var(--brand)}
+.nav-panel a:hover small{color:var(--mut)}
+.nav-panel a.here{color:var(--brand)}
+.nav-panel-label{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:11px 11px 5px}
+.nav-panel-label:first-child{padding-top:5px}
+.nav-toggle{display:none;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);cursor:pointer}
+.nav-toggle svg{width:20px;height:20px}
+.topnav.nav-open .nav-toggle{background:#F1F2F7;color:var(--brand)}
+.nav-cta.nav-cta-mobile{display:none}
+@media (hover:hover) and (min-width:901px){
+  .nav-group:hover>.nav-panel{display:flex}
+  .nav-group:hover>.nav-item{background:#F1F2F7;color:var(--brand)}
+  .nav-group:hover>.nav-item .chev{transform:rotate(180deg)}
+}
 .nav-cta{display:inline-flex;align-items:center;gap:7px;background:var(--brand);color:#fff;font-weight:700;font-size:14px;padding:10px 20px;border-radius:10px;text-decoration:none;box-shadow:0 4px 14px rgba(242,101,34,.32);transition:background .12s ease}
 .nav-cta:hover{background:var(--brand2)}
 
@@ -121,6 +141,46 @@ section.alt{background:var(--bg)}
 .verify-list li svg{width:19px;height:19px;color:var(--ok-ink);flex:none;margin-top:2px}
 .verify-list b{color:var(--ink)}
 
+/* ---------- architecture: mermaid + matrices ---------- */
+.mm-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-card);padding:8px 8px 4px;margin:0 0 14px}
+.mm-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:14px 10px}
+.mermaid{font-family:var(--sans);min-height:40px}
+.mermaid:not([data-processed]){font-family:var(--mono);font-size:11.5px;white-space:pre;color:var(--faint)}
+.mm-scroll svg{display:block;margin:0 auto;height:auto}
+.mm-hint{display:none;font-size:12px;color:var(--faint);padding:0 12px 10px;text-align:center}
+.mm-legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--mut);margin:0 0 20px;padding:0 2px}
+.mm-legend span{display:inline-flex;align-items:center;gap:7px}
+.mm-legend i{width:13px;height:13px;border-radius:4px;flex:none;border:1.5px solid}
+.mm-legend i.k-pci{background:#FFF1E9;border-color:#F26522}
+.mm-legend i.k-dlp{background:#ECFDF5;border-color:#1E9E5A}
+.mm-legend i.k-ctrl{background:#F3EFFF;border-color:#7C5CFC}
+.mm-legend i.k-agent{background:#EEF2FF;border-color:#4F46E5}
+.mm-legend i.k-never{background:#FEF2F2;border-color:#DC2626;border-style:dashed}
+.mm-legend i.k-next{background:#F3EFFF;border-color:#7C5CFC;border-style:dashed}
+details.mm-src{margin:0 0 30px;font-size:13.5px}
+details.mm-src summary{cursor:pointer;color:var(--indigo);font-weight:600;padding:8px 0;list-style:none}
+details.mm-src summary::-webkit-details-marker{display:none}
+details.mm-src summary::before{content:"▸ ";color:var(--faint)}
+details.mm-src[open] summary::before{content:"▾ "}
+details.mm-src pre{background:var(--term-deep);color:var(--term-ink);border-radius:12px;padding:16px 18px;overflow-x:auto;font-size:12px;line-height:1.55;margin:6px 0 0}
+h3.arch-h{font-size:19px;margin:38px 0 6px;letter-spacing:-.015em;font-weight:800}
+h3.arch-h:first-of-type{margin-top:26px}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card);box-shadow:var(--shadow-card);margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:640px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:var(--bg);font-weight:700;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+td b{color:var(--ink)}
+td code,th code{font-family:var(--mono);font-size:12px;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+td .no{color:var(--bad);font-weight:700}
+td .yes{color:var(--ok-ink);font-weight:700}
+td .lim{color:var(--warn);font-weight:700}
+@media (max-width:760px){
+  .mm-scroll svg{min-width:660px;max-width:none!important;width:auto!important}
+  .mm-hint{display:block}
+  h3.arch-h{font-size:17px}
+}
+
 /* ---------- footnotes + footer ---------- */
 .footnotes{font-size:12.5px;color:var(--faint);border-top:1px solid var(--line);padding:22px 0 0;margin-top:10px;line-height:1.8}
 .footnotes sup{color:var(--brand)}
@@ -131,8 +191,20 @@ footer .sep{margin:0 8px;color:#D1D5DB}
 footer b{color:var(--ink)}
 footer a{color:var(--brand)}
 
-@media (max-width:800px){
-  .nav-links{display:none}
+@media (max-width:900px){
+  .nav-toggle{display:inline-flex}
+  .nav-inner{gap:12px}
+  .nav-inner>.nav-cta{display:none}
+  .nav-menu{position:absolute;top:100%;left:0;right:0;z-index:59;flex-direction:column;align-items:stretch;gap:0;display:none;
+    background:#fff;border-bottom:1px solid var(--line);box-shadow:var(--shadow-lift);
+    padding:8px 24px 20px;max-height:calc(100dvh - 68px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .topnav.nav-open .nav-menu{display:flex}
+  .nav-item{width:100%;justify-content:space-between;padding:14px 6px;border-radius:10px;font-size:15.5px}
+  .nav-group+.nav-group>.nav-item,.nav-menu>a.nav-item{border-top:1px solid var(--line)}
+  .nav-panel{position:static;min-width:0;border:0;border-left:2px solid #E9EAF2;border-radius:0;box-shadow:none;
+    padding:2px 0 10px 14px;margin:0 0 6px 8px;background:none}
+  .nav-panel a{padding:10px 8px}
+  .nav-cta.nav-cta-mobile{display:inline-flex;justify-content:center;width:100%;margin-top:16px}
 }
 @media (max-width:640px){
   section{padding:56px 0}
@@ -183,15 +255,44 @@ footer a{color:var(--brand)}
         <circle class="lybo-bridge-dot lybo-dot-3" cx="40" cy="20" r="3" fill="#f97316"/>
       </g>
     </svg><span class="logo-word">Lybo<span class="ai">AI</span></span></a>
-    <span class="nav-links">
-      <a href="index.html">Home</a>
-      <a href="#story">The story</a>
-      <a href="#built">What got built</a>
-      <a href="#actors">Three actors</a>
-      <a href="#depth">Domain depth</a>
-      <a href="#security">Security</a>
-      <a href="#verified">Verified</a>
-    </span>
+    <div class="nav-menu" id="navmenu">
+      <div class="nav-group" data-group="product">
+        <button class="nav-item" type="button" aria-expanded="false" aria-controls="navpanel-product">Product<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="nav-panel" id="navpanel-product" role="group" aria-label="Product">
+        <a href="index.html#built">What we built<small>The three surfaces, in one view</small></a>
+        <a href="index.html#how">How it works<small>Chat to Pinch call, step by step</small></a>
+        <a href="index.html#blueprint">The blueprint<small>Natural language to a validated billing plan</small></a>
+        <a href="index.html#playground">Playground<small>Replay real sandbox captures</small></a>
+        <a href="index.html#hosting">Hosting<small>Run pinch-mcp yourself</small></a>
+        <a href="index.html#lyboai">LyboAI<small>The platform the agents run on</small></a>
+        </div>
+      </div>
+      <div class="nav-group" data-group="build">
+        <button class="nav-item" type="button" aria-expanded="false" aria-controls="navpanel-build">The build<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="nav-panel" id="navpanel-build" role="group" aria-label="The build">
+        <a class="here" href="#top">Hackathon build<small>The submission summary page</small></a>
+        <a class="here" href="#story">The story<small>The four gaps Remi closes</small></a>
+        <a class="here" href="#actors">Three actors<small>Platform, business, customer — BYO keys</small></a>
+        <a class="here" href="#depth">Domain depth<small>Dishonours, splits, settlement, cashflow</small></a>
+        <a href="build-log.html">Build log<small>Timeline, decisions, open issues</small></a>
+        <a href="build-log.html#progress">Progress</a>
+        <a href="build-log.html#timeline">Timeline</a>
+        <a href="build-log.html#decisions">Decisions</a>
+        <a href="build-log.html#issues">Open issues</a>
+        </div>
+      </div>
+      <div class="nav-group" data-group="security">
+        <button class="nav-item" type="button" aria-expanded="false" aria-controls="navpanel-security">Security<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="nav-panel" id="navpanel-security" role="group" aria-label="Security">
+        <a class="here" href="#security">Guardrails<small>Approve-then-act, enforced in the tool layer</small></a>
+        <a class="here" href="#architecture">Architecture &amp; data flow<small>Where card data goes — and where it never goes</small></a>
+        <a class="here" href="#boundaries">PCI scope &amp; privacy<small>Data-handling boundaries, APPs, retention</small></a>
+        <a class="here" href="#verified">Verified in sandbox<small>Every claim traced to a test-env run</small></a>
+        </div>
+      </div>
+      <a class="nav-cta nav-cta-mobile" href="mailto:rajan.dua@lybotechgroup.com?subject=Remi%20feedback">Give feedback</a>
+    </div>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="navmenu" aria-label="Open navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></svg></button>
     <a class="nav-cta" href="mailto:rajan.dua@lybotechgroup.com?subject=Remi%20feedback">Give feedback</a>
   </div>
 </nav>
@@ -204,6 +305,7 @@ footer a{color:var(--brand)}
     <p class="sub">One build, three surfaces: the first Pinch MCP server, ready-to-deploy agents on LyboAI, and a live platform integration in CoachPlus. This page is the build summary — written for developers and for the business side, and shared for feedback.</p>
     <div class="ctas">
       <a class="btn btn-primary" href="index.html#playground">Try the playground →</a>
+      <a class="btn btn-secondary" href="build-log.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/></svg>Read the build log</a>
       <a class="btn btn-secondary" href="mailto:rajan.dua@lybotechgroup.com?subject=Remi%20feedback"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>Give feedback</a>
     </div>
     <div class="trust">
@@ -211,7 +313,7 @@ footer a{color:var(--brand)}
       <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Verified against the Pinch test environment<sup>1</sup></span>
     </div>
     <div class="hero-strip">
-      <span><b>22</b> MCP tools</span>
+      <span><b>23</b> MCP tools</span>
       <span><b>3</b> surfaces: MCP · agents · platform</span>
       <span>every write needs <b>confirm:true</b></span>
       <span><b>BYO keys</b> — no aggregation</span>
@@ -267,8 +369,8 @@ footer a{color:var(--brand)}
       <div class="card">
         <div class="icon tint-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01"/><path d="M6 18h.01"/></svg></div>
         <h3>pinch-mcp</h3>
-        <p>The first Pinch MCP server: 22 tools over the Pinch API, usable from Claude, Cursor or any agent host. Hosted multi-tenant — every caller brings their own Pinch keys. Writes are confirm-guarded, refunds are capped, and the public endpoint refuses the live environment outright.<sup>1</sup></p>
-        <div class="tags"><span class="tag">22 tools</span><span class="tag ok">confirm-guarded writes</span><span class="tag warn">refund caps</span><span class="tag indigo">live-env refusal</span></div>
+        <p>The first Pinch MCP server: 23 tools over the Pinch API (payments, subscriptions, splits, refunds, and QR payment links), usable from Claude, Cursor or any agent host. Hosted multi-tenant — every caller brings their own Pinch keys. Writes are confirm-guarded, refunds are capped, and the public endpoint refuses the live environment outright.<sup>1</sup></p>
+        <div class="tags"><span class="tag">23 tools</span><span class="tag ok">confirm-guarded writes</span><span class="tag warn">refund caps</span><span class="tag indigo">live-env refusal</span></div>
       </div>
       <div class="card">
         <div class="icon tint-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
@@ -279,8 +381,9 @@ footer a{color:var(--brand)}
       <div class="card">
         <div class="icon tint-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div>
         <h3>CoachPlus integration</h3>
-        <p>Pinch as the platform's payments provider: hosted checkout, term subscriptions, webhook-driven GST invoices, dishonour handling, and a floating Remi assistant inside the product.</p>
-        <div class="tags"><span class="tag">hosted checkout</span><span class="tag">term subscriptions</span><span class="tag ok">webhook GST invoices</span></div>
+        <p>Pinch is the live platform's payments provider. In-product: hosted checkout and QR links, term / weekly / fortnightly subscriptions with deposits (direct debit), refunds, cancellations, bill splits and discount codes on customer payments, webhook-driven GST invoices, dishonour diagnosis, a payments simulator, and a floating Remi assistant. The coach action routes call the MCP engine today; a native REST path is a polish item.</p>
+        <div class="tags"><span class="tag">hosted checkout + QR</span><span class="tag">term/weekly subscriptions</span><span class="tag">refunds · splits · discounts</span><span class="tag ok">webhook GST invoices</span><span class="tag warn">simulator</span></div>
+        <p style="margin-top:14px"><a href="https://www.thecoachplus.com" target="_blank" rel="noopener" style="font-weight:600;color:var(--brand);text-decoration:none">View the live platform ↗</a></p>
       </div>
     </div>
   </div>
@@ -387,6 +490,317 @@ footer a{color:var(--brand)}
   </div>
 </section>
 
+<!-- ============ 6b. ARCHITECTURE / DATA FLOW ============ -->
+<section id="architecture" class="alt">
+  <div class="wrap">
+    <p class="kicker">Architecture &amp; data flow</p>
+    <h2>Card and bank details never reach the Studio, the model, or this MCP server</h2>
+    <p class="lead">Payment details are captured by <b>Pinch CaptureJS</b> or a Pinch-hosted page in the payer's own
+      browser, so they never touch the application server — and therefore never enter the chat transcript, the model
+      context, an MCP request, or telemetry. The build has no card or bank-account field anywhere: the 23 tool schemas
+      in <code>pinch-mcp</code> contain no <code>cardNumber</code>, <code>cvv</code>, <code>bsb</code> or
+      <code>accountNumber</code> parameter, and payer payment sources are only ever established through a Pinch-hosted
+      link (<code>pendingSetup</code>).</p>
+
+    <h3 class="arch-h">A · Where payment data goes, and where it never goes</h3>
+    <div class="mm-legend">
+      <span><i class="k-pci"></i>In PCI DSS scope — Pinch only</span>
+      <span><i class="k-agent"></i>Model context</span>
+      <span><i class="k-ctrl"></i>Control-plane check, implemented</span>
+      <span><i class="k-dlp"></i>Bounded and unlogged, implemented</span>
+      <span><i class="k-next"></i>Pipeline — Polish Week</span>
+      <span><i class="k-never"></i>Prohibited — never crosses</span>
+    </div>
+    <div class="mm-card">
+      <div class="mm-scroll"><div class="mermaid" aria-label="Data-handling boundaries: payment capture, agent plane, control plane and Pinch">
+flowchart TB
+  classDef pci fill:#FFF1E9,stroke:#F26522,stroke-width:2px,color:#8A3A10
+  classDef agent fill:#EEF2FF,stroke:#4F46E5,stroke-width:1.5px,color:#312E81
+  classDef ctrl fill:#F3EFFF,stroke:#7C5CFC,stroke-width:1.5px,color:#3F2E7E
+  classDef dlp fill:#ECFDF5,stroke:#1E9E5A,stroke-width:1.5px,color:#12603A
+  classDef next fill:#F3EFFF,stroke:#7C5CFC,stroke-width:1.5px,stroke-dasharray:5 4,color:#3F2E7E
+  classDef never fill:#FEF2F2,stroke:#DC2626,stroke-width:1.5px,stroke-dasharray:5 4,color:#991B1B
+  classDef plain fill:#FFFFFF,stroke:#D8DAE5,color:#1A1A2E
+
+  subgraph CAP["Payer's browser — where payment details are captured"]
+    direction TB
+    P1["Payer opens a Pinch-hosted<br/>setup or payment link"]:::plain
+    P2["Pinch CaptureJS or Pinch-hosted page<br/>the card and bank fields belong to Pinch"]:::pci
+    P1 --> P2
+  end
+
+  subgraph ST["LyboAI Studio — agent plane"]
+    direction TB
+    O["Operator, in natural language"]:::plain
+    D1["PIPELINE · Inbound redaction<br/>remove · tokenise · mask"]:::next
+    M["Model context"]:::agent
+    D2["PIPELINE · Outbound redaction"]:::next
+    N1["Never present in this plane<br/>PAN · BSB · account number · CVV · PIN<br/>Pinch secret key · OAuth token"]:::never
+    O --> D1 --> M --> D2
+  end
+
+  subgraph MC["pinch-mcp — constrained financial control plane"]
+    direction TB
+    Z["Zod schema validation,<br/>every argument"]:::ctrl
+    G["confirm:true guard, enforced in the<br/>tool handler and not in prompt text"]:::ctrl
+    T["23 narrow tools · no generic call_api<br/>no card or bank field in any schema"]:::ctrl
+    N2["Never accepted as a tool argument<br/>PAN · BSB · account number · CVV · PIN"]:::never
+    Z --> G --> T
+  end
+
+  PINCH["Pinch — the only plane that holds payment credentials<br/>tokenisation and vault: PAN · BSB · account number · CVV<br/>api.getpinch.com.au"]:::pci
+  R1["Bounded output, 200 kB cap<br/>no parameters or results logged"]:::dlp
+  R2["PIPELINE · Response redaction scan"]:::next
+  UI["Token reference · source type · last four · status<br/>returned to the model, then to the operator"]:::plain
+
+  P2 ==>|"credentials travel browser to Pinch, direct"| PINCH
+  D2 -->|"intent plus tokenised references only"| Z
+  T -->|"OAuth2 client credentials, per-request secret<br/>token cached in memory, 55 minutes"| PINCH
+  PINCH --> R1 --> R2 --> UI
+</div></div>
+      <p class="mm-hint">Scroll the diagram sideways to read it in full.</p>
+    </div>
+    <details class="mm-src"><summary>Mermaid source — data-handling boundaries</summary>
+<pre>flowchart TB
+  classDef pci fill:#FFF1E9,stroke:#F26522,stroke-width:2px,color:#8A3A10
+  classDef agent fill:#EEF2FF,stroke:#4F46E5,stroke-width:1.5px,color:#312E81
+  classDef ctrl fill:#F3EFFF,stroke:#7C5CFC,stroke-width:1.5px,color:#3F2E7E
+  classDef dlp fill:#ECFDF5,stroke:#1E9E5A,stroke-width:1.5px,color:#12603A
+  classDef next fill:#F3EFFF,stroke:#7C5CFC,stroke-width:1.5px,stroke-dasharray:5 4,color:#3F2E7E
+  classDef never fill:#FEF2F2,stroke:#DC2626,stroke-width:1.5px,stroke-dasharray:5 4,color:#991B1B
+  classDef plain fill:#FFFFFF,stroke:#D8DAE5,color:#1A1A2E
+
+  subgraph CAP[&quot;Payer&#x27;s browser — where payment details are captured&quot;]
+    direction TB
+    P1[&quot;Payer opens a Pinch-hosted&lt;br/&gt;setup or payment link&quot;]:::plain
+    P2[&quot;Pinch CaptureJS or Pinch-hosted page&lt;br/&gt;the card and bank fields belong to Pinch&quot;]:::pci
+    P1 --&gt; P2
+  end
+
+  subgraph ST[&quot;LyboAI Studio — agent plane&quot;]
+    direction TB
+    O[&quot;Operator, in natural language&quot;]:::plain
+    D1[&quot;PIPELINE · Inbound redaction&lt;br/&gt;remove · tokenise · mask&quot;]:::next
+    M[&quot;Model context&quot;]:::agent
+    D2[&quot;PIPELINE · Outbound redaction&quot;]:::next
+    N1[&quot;Never present in this plane&lt;br/&gt;PAN · BSB · account number · CVV · PIN&lt;br/&gt;Pinch secret key · OAuth token&quot;]:::never
+    O --&gt; D1 --&gt; M --&gt; D2
+  end
+
+  subgraph MC[&quot;pinch-mcp — constrained financial control plane&quot;]
+    direction TB
+    Z[&quot;Zod schema validation,&lt;br/&gt;every argument&quot;]:::ctrl
+    G[&quot;confirm:true guard, enforced in the&lt;br/&gt;tool handler and not in prompt text&quot;]:::ctrl
+    T[&quot;23 narrow tools · no generic call_api&lt;br/&gt;no card or bank field in any schema&quot;]:::ctrl
+    N2[&quot;Never accepted as a tool argument&lt;br/&gt;PAN · BSB · account number · CVV · PIN&quot;]:::never
+    Z --&gt; G --&gt; T
+  end
+
+  PINCH[&quot;Pinch — the only plane that holds payment credentials&lt;br/&gt;tokenisation and vault: PAN · BSB · account number · CVV&lt;br/&gt;api.getpinch.com.au&quot;]:::pci
+  R1[&quot;Bounded output, 200 kB cap&lt;br/&gt;no parameters or results logged&quot;]:::dlp
+  R2[&quot;PIPELINE · Response redaction scan&quot;]:::next
+  UI[&quot;Token reference · source type · last four · status&lt;br/&gt;returned to the model, then to the operator&quot;]:::plain
+
+  P2 ==&gt;|&quot;credentials travel browser to Pinch, direct&quot;| PINCH
+  D2 --&gt;|&quot;intent plus tokenised references only&quot;| Z
+  T --&gt;|&quot;OAuth2 client credentials, per-request secret&lt;br/&gt;token cached in memory, 55 minutes&quot;| PINCH
+  PINCH --&gt; R1 --&gt; R2 --&gt; UI
+</pre></details>
+
+    <h3 class="arch-h">B · Drafting is separated from execution</h3>
+    <div class="mm-legend">
+      <span><i class="k-dlp"></i>Implemented in the current release</span>
+      <span><i class="k-next"></i>Pipeline — Polish Week</span>
+      <span><i class="k-never"></i>Blocked, with an audit event</span>
+    </div>
+    <div class="mm-card">
+      <div class="mm-scroll"><div class="mermaid" aria-label="Draft, validate, approve and execute flow with the approval gate">
+flowchart TB
+  classDef now fill:#ECFDF5,stroke:#1E9E5A,stroke-width:1.5px,color:#12603A
+  classDef next fill:#F3EFFF,stroke:#7C5CFC,stroke-width:1.5px,stroke-dasharray:5 4,color:#3F2E7E
+  classDef stop fill:#FEF2F2,stroke:#DC2626,stroke-width:1.5px,color:#991B1B
+  classDef plain fill:#FFFFFF,stroke:#D8DAE5,color:#1A1A2E
+
+  I["Operator states the commercial intent<br/>'$59 a week for 10 weeks, $100 deposit'"]:::plain
+  DR["Draft — the tool composes the call and returns<br/>a structured preview. Nothing is created."]:::now
+  VA["Validate — zod schema · currency · merchant binding ·<br/>refund cap · fee preview · dishonour rules"]:::now
+  DEC{"Human approves<br/>the preview?"}
+  NO["No write occurs. Preview returned,<br/>audit event written."]:::stop
+  AP["Approve — the caller repeats the call<br/>with confirm:true"]:::now
+  AO["PIPELINE · Polish Week<br/>Signed short-lived approval object bound to:<br/>payer token · merchant · amount + currency · purpose ·<br/>source token · approving user · expiry · draft hash"]:::next
+  CH{"PIPELINE<br/>Amount, recipient or draft<br/>hash changed since approval?"}
+  RJ["Rejected — approval invalidated,<br/>audit event written"]:::stop
+  EX["Execute — one Pinch write,<br/>sent with an idempotency nonce"]:::now
+  OK["Redacted structured response, plus one audit line<br/>carrying a hashed tenant tag and no parameters"]:::now
+
+  I --> DR --> VA --> DEC
+  DEC -->|"no"| NO
+  DEC -->|"yes"| AP
+  AP --> AO --> CH
+  CH -->|"yes"| RJ
+  CH -->|"no"| EX
+  EX --> OK
+</div></div>
+      <p class="mm-hint">Scroll the diagram sideways to read it in full.</p>
+    </div>
+    <details class="mm-src"><summary>Mermaid source — draft / validate / approve / execute</summary>
+<pre>flowchart TB
+  classDef now fill:#ECFDF5,stroke:#1E9E5A,stroke-width:1.5px,color:#12603A
+  classDef next fill:#F3EFFF,stroke:#7C5CFC,stroke-width:1.5px,stroke-dasharray:5 4,color:#3F2E7E
+  classDef stop fill:#FEF2F2,stroke:#DC2626,stroke-width:1.5px,color:#991B1B
+  classDef plain fill:#FFFFFF,stroke:#D8DAE5,color:#1A1A2E
+
+  I[&quot;Operator states the commercial intent&lt;br/&gt;&#x27;$59 a week for 10 weeks, $100 deposit&#x27;&quot;]:::plain
+  DR[&quot;Draft — the tool composes the call and returns&lt;br/&gt;a structured preview. Nothing is created.&quot;]:::now
+  VA[&quot;Validate — zod schema · currency · merchant binding ·&lt;br/&gt;refund cap · fee preview · dishonour rules&quot;]:::now
+  DEC{&quot;Human approves&lt;br/&gt;the preview?&quot;}
+  NO[&quot;No write occurs. Preview returned,&lt;br/&gt;audit event written.&quot;]:::stop
+  AP[&quot;Approve — the caller repeats the call&lt;br/&gt;with confirm:true&quot;]:::now
+  AO[&quot;PIPELINE · Polish Week&lt;br/&gt;Signed short-lived approval object bound to:&lt;br/&gt;payer token · merchant · amount + currency · purpose ·&lt;br/&gt;source token · approving user · expiry · draft hash&quot;]:::next
+  CH{&quot;PIPELINE&lt;br/&gt;Amount, recipient or draft&lt;br/&gt;hash changed since approval?&quot;}
+  RJ[&quot;Rejected — approval invalidated,&lt;br/&gt;audit event written&quot;]:::stop
+  EX[&quot;Execute — one Pinch write,&lt;br/&gt;sent with an idempotency nonce&quot;]:::now
+  OK[&quot;Redacted structured response, plus one audit line&lt;br/&gt;carrying a hashed tenant tag and no parameters&quot;]:::now
+
+  I --&gt; DR --&gt; VA --&gt; DEC
+  DEC --&gt;|&quot;no&quot;| NO
+  DEC --&gt;|&quot;yes&quot;| AP
+  AP --&gt; AO --&gt; CH
+  CH --&gt;|&quot;yes&quot;| RJ
+  CH --&gt;|&quot;no&quot;| EX
+  EX --&gt; OK</pre></details>
+
+    <div class="notice"><b>Positioning.</b> This architecture is <b>designed to minimise PCI DSS scope</b> — it is not a
+      claim of PCI DSS compliance. No part of this build has been formally assessed, and the hackathon build runs against
+      the Pinch <b>test</b> environment with synthetic customers only.</div>
+  </div>
+</section>
+
+<!-- ============ 6c. DATA BOUNDARIES + PRIVACY ============ -->
+<section id="boundaries">
+  <div class="wrap">
+    <p class="kicker">PCI scope &amp; privacy</p>
+    <h2>One rule per data class, applied at every boundary</h2>
+    <p class="lead">The table below is the rule set the build is written against. It is a design contract, not a
+      certification: the columns say what each plane is permitted to see, and the prohibitions are absolute rather than
+      consent-dependent.</p>
+
+    <h3 class="arch-h">Data-handling boundaries</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Data class</th><th>Agent / model context</th><th>MCP server</th><th>Storage</th></tr></thead>
+        <tbody>
+          <tr><td><b>Sensitive authentication data</b><br/>CVV/CVC, PIN and PIN blocks, full track data</td>
+              <td><span class="no">Never</span></td><td><span class="no">Never</span></td>
+              <td><span class="no">Never after authorisation</span></td></tr>
+          <tr><td><b>Raw payment credentials</b><br/>full PAN, bank account number</td>
+              <td><span class="no">Never</span></td><td><span class="no">Avoided entirely</span></td>
+              <td>Pinch tokenisation boundary only</td></tr>
+          <tr><td><b>Security credentials</b><br/>Pinch secret key, OAuth tokens, API keys</td>
+              <td><span class="no">Never</span></td><td>In-memory retrieval only, request-scoped</td>
+              <td>Secrets manager / KMS</td></tr>
+          <tr><td><b>Tokenised payment references</b></td>
+              <td><span class="yes">Permitted</span></td><td><span class="yes">Permitted</span></td>
+              <td>Encrypted</td></tr>
+          <tr><td><b>Display-safe payment data</b><br/>brand, source type, last four</td>
+              <td><span class="lim">Permitted when necessary</span></td><td><span class="yes">Permitted</span></td>
+              <td>Limited retention</td></tr>
+          <tr><td><b>Personal information</b><br/>name, email, address, phone, IP</td>
+              <td>Redacted or pseudonymised</td><td>Only when operationally necessary</td>
+              <td>Purpose-limited</td></tr>
+          <tr><td><b>Transaction information</b></td>
+              <td>Permitted with a pseudonymous customer ID</td><td><span class="yes">Permitted</span></td>
+              <td>Financial retention policy</td></tr>
+          <tr><td><b>Unstructured content</b><br/>prompts, uploaded invoices, OCR, generated code</td>
+              <td><span class="lim">Pipeline</span> — redaction scan before use</td>
+              <td><span class="lim">Pipeline</span> — redaction scan in both directions</td>
+              <td>No raw prompt retention</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notice"><b>What the standard says.</b> PCI DSS prohibits storing CVV/CVC, PIN and PIN blocks and related
+      sensitive authentication data after authorisation, <b>even when encrypted</b>. A customer cannot consent around
+      that prohibition, so it is enforced as an absence of fields rather than as a policy.</div>
+
+    <h3 class="arch-h">Redaction path — pipeline</h3>
+    <p class="lead" style="margin-bottom:8px"><b>What exists today.</b> The absence of card and bank fields in every tool
+      schema, hosted-only capture of payment sources, request-scoped credentials, hashed tenant tags in audit lines with no
+      parameters or results logged, and a 200 kB cap on tool output. There is no content-classification layer in this
+      release: the boundary is currently enforced by what the schemas cannot accept, not by scanning.</p>
+    <p class="lead" style="margin-bottom:18px"><b>What is planned.</b> Two redaction passes on the way out and one on the way back, with three
+      treatments: <b>remove</b> (CVV, full PAN, passwords, API secrets), <b>tokenise</b> (payer identity, payment source,
+      bank-account reference) and <b>mask</b> (<code>Visa •••• 4242</code>, <code>payer_7F21</code>, <code>$99 AUD</code>).
+      Model context will carry session-scoped aliases such as <code>CUSTOMER_01</code>, with the alias-to-identity map
+      held in a separate encrypted vault the model cannot reach. Detection is to cover structured tool arguments, free text,
+      uploaded documents, OCR output, generated code, model outputs, error messages, traces, audit logs and support
+      exports. Where classification fails, or a probable card number appears where one should not exist, the request
+      <b>fails closed</b>.</p>
+
+    <h3 class="arch-h">Australian privacy obligations</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Obligation</th><th>What applies</th><th>Hackathon build today</th><th>Pipeline</th></tr></thead>
+        <tbody>
+          <tr><td>APP 1 — open and transparent management</td>
+              <td>A clearly expressed, up-to-date privacy policy covering how personal information is handled</td>
+              <td>Data-handling rules published here and in <code>SECURITY.md</code></td>
+              <td>Product privacy policy and collection notice per deployed workspace</td></tr>
+          <tr><td>APP 3 — collection of solicited personal information</td>
+              <td>Collect only what is reasonably necessary for a function or activity</td>
+              <td>Synthetic customers only; tools request name, email and amount — no card or bank fields</td>
+              <td>Field-level necessity review per tool before live operation</td></tr>
+          <tr><td>APP 11 — security of personal information</td>
+              <td>Reasonable steps to protect information, and to destroy or de-identify it when no longer needed</td>
+              <td>TLS in transit, no credentials at rest on the server, hashed tenant tags in logs, bounded outputs</td>
+              <td>Retention schedules with automated destruction and de-identification jobs</td></tr>
+          <tr><td>Personal information is broader than names</td>
+              <td>Transaction history, IP addresses, device identifiers, location and combinations of otherwise harmless
+                  data may identify someone</td>
+              <td>Pseudonymous customer IDs in model context; audit lines carry a hashed tenant tag, not a merchant ID</td>
+              <td>Re-identification risk assessment across the combined telemetry set</td></tr>
+          <tr><td>Consent and purpose limitation</td>
+              <td>Specific consent for a stated purpose, rather than a broad “AI use” consent</td>
+              <td>Not applicable — no real personal information is processed in the sandbox build</td>
+              <td>Per-purpose consent capture, and model-provider and cross-border disclosure review</td></tr>
+          <tr><td>Access and correction</td>
+              <td>Individuals may request access to, and correction of, their personal information</td>
+              <td>Payer records are readable and correctable through Pinch</td>
+              <td>Documented access and correction workflow with response timeframes</td></tr>
+          <tr><td>Notifiable Data Breaches</td>
+              <td>Assess suspected eligible breaches and notify the OAIC and affected individuals</td>
+              <td>Per-call audit logging provides the evidence trail for assessment</td>
+              <td>Written NDB response plan, with SIEM alerting on failed-validation and high-frequency patterns</td></tr>
+          <tr><td>Automated-decision transparency<br/><b>commences 10 December 2026</b></td>
+              <td>Privacy policies must disclose automated decisions that use personal information where those decisions
+                  significantly affect an individual's rights or interests</td>
+              <td>Remi makes no such decision: it drafts, previews and explains — a human approves every write</td>
+              <td>Disclosure statement, plus a standing prohibition on creditworthiness, hardship and KYC-override
+                  decisions by the agent</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="arch-h">What the agent may and may not do</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>The agent may</th><th>The agent may not do autonomously</th></tr></thead>
+        <tbody>
+          <tr><td>Interpret commercial requirements; recommend a Pinch pattern; generate a billing blueprint; explain
+                  fees and schedules; create drafts and previews; simulate failures; identify reconciliation
+                  differences</td>
+              <td>Charge a customer; increase an amount; change the receiving merchant; refund a settled payment; create
+                  or modify payout details; retry indefinitely; make creditworthiness or financial-hardship decisions;
+                  override compliance or KYC status</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="notice">Financial execution stays deterministic, bounded and reviewable. The MCP server is a constrained
+      financial control plane, not a generic proxy: there is deliberately no <code>pinch.call_api(method, endpoint,
+      body)</code> tool, because a generic passthrough would let prompt injection turn the agent into an unrestricted
+      API client.</div>
+  </div>
+</section>
+
 <!-- ============ 7. VERIFIED AGAINST THE REAL SANDBOX ============ -->
 <section id="verified" class="alt">
   <div class="wrap">
@@ -414,7 +828,7 @@ footer a{color:var(--brand)}
         <div class="icon tint-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
         <h3>For developers</h3>
         <p>What would you want from a Pinch MCP or agent toolkit? Missing tools, different guard semantics, other transports, a different hosting shape — specifics are the useful kind of feedback.</p>
-        <div class="tags" style="margin-bottom:18px"><span class="tag indigo">22 tools today</span><span class="tag">what should be next?</span></div>
+        <div class="tags" style="margin-bottom:18px"><span class="tag indigo">23 tools today</span><span class="tag">what should be next?</span></div>
         <a class="btn btn-primary" style="margin-top:auto;align-self:flex-start" href="mailto:rajan.dua@lybotechgroup.com?subject=Remi%20feedback">Give feedback →</a>
       </div>
       <div class="card">
@@ -461,5 +875,100 @@ footer a{color:var(--brand)}
   </div>
 </footer>
 
+<script>
+/* Grouped nav: click/tap to open a cluster, hover on pointer desktops (CSS),
+   hamburger disclosure below 900px. Closes on outside click, Escape, resize. */
+(function () {
+  var nav = document.querySelector(".topnav");
+  if (!nav) return;
+  var toggle = nav.querySelector(".nav-toggle");
+  var groups = [].slice.call(nav.querySelectorAll(".nav-group"));
+
+  function closeGroups(except) {
+    groups.forEach(function (g) {
+      if (g === except) return;
+      g.classList.remove("open");
+      var b = g.querySelector(".nav-item");
+      if (b) b.setAttribute("aria-expanded", "false");
+    });
+  }
+  function closeMenu() {
+    nav.classList.remove("nav-open");
+    if (toggle) toggle.setAttribute("aria-expanded", "false");
+  }
+
+  groups.forEach(function (g) {
+    var btn = g.querySelector(".nav-item");
+    if (!btn) return;
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var open = !g.classList.contains("open");
+      closeGroups(g);
+      g.classList.toggle("open", open);
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  });
+
+  if (toggle) {
+    toggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      var open = !nav.classList.contains("nav-open");
+      nav.classList.toggle("nav-open", open);
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      if (!open) closeGroups(null);
+    });
+  }
+
+  nav.querySelectorAll(".nav-panel a, .nav-cta-mobile").forEach(function (a) {
+    a.addEventListener("click", function () { closeGroups(null); closeMenu(); });
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!nav.contains(e.target)) { closeGroups(null); closeMenu(); }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { closeGroups(null); closeMenu(); }
+  });
+  var mq = window.matchMedia("(max-width:900px)");
+  (mq.addEventListener ? mq.addEventListener.bind(mq, "change") : mq.addListener.bind(mq))(
+    function () { closeGroups(null); closeMenu(); }
+  );
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.3/mermaid.min.js"
+  integrity="sha384-R63zfMfSwJF4xCR11wXii+QUsbiBIdiDzDbtxia72oGWfkT7WHJfmD/I/eeHPJyT"
+  crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+/* Architecture diagrams. Brand-matched base theme; useMaxWidth keeps the SVG
+   inside its card on desktop, and the CSS override under 760px lets it scroll
+   sideways at a legible size instead of shrinking to nothing. */
+if (window.mermaid) {
+  mermaid.initialize({
+    startOnLoad: true,
+    securityLevel: "strict",
+    theme: "base",
+    themeVariables: {
+      fontFamily: "Geist, Inter, system-ui, -apple-system, sans-serif",
+      fontSize: "13px",
+      primaryColor: "#ffffff",
+      primaryTextColor: "#1A1A2E",
+      primaryBorderColor: "#D8DAE5",
+      lineColor: "#8B90A8",
+      textColor: "#1A1A2E",
+      clusterBkg: "#F7F8FC",
+      clusterBorder: "#E5E7EB",
+      edgeLabelBackground: "#ffffff"
+    },
+    flowchart: {
+      useMaxWidth: true,
+      htmlLabels: true,
+      curve: "basis",
+      padding: 14,
+      nodeSpacing: 36,
+      rankSpacing: 46
+    }
+  });
+}
+</script>
 </body>
 </html>

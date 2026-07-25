@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>Remi × Pinch — Demo Runbook</title>
+<style>
+  :root{
+    --ink:#1A1A2E; --brand:#F26522; --brand2:#F97316; --indigo:#4F46E5; --purple:#7C5CFC;
+    --ok:#1E9E5A; --warn:#b45309; --bad:#dc2626; --mut:#6B7280; --faint:#9CA3AF;
+    --line:#E5E7EB; --bg:#F7F8FC; --card:#fff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Geist",Inter,system-ui,sans-serif;line-height:1.6}
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px}
+  header.hero{background:linear-gradient(160deg,#1A1A2E,#14142B);color:#fff;padding:48px 0 40px}
+  header .kicker{color:#fb923c;font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;margin:0}
+  header h1{font-size:34px;margin:8px 0 6px;font-weight:800}
+  header p{color:#c9cede;max-width:640px;margin:0}
+  .badge{display:inline-block;background:#F59E0B;color:#111;font-weight:700;font-size:12px;padding:3px 10px;border-radius:6px;margin-bottom:14px}
+  section{padding:26px 0;border-bottom:1px solid var(--line)}
+  h2{font-size:22px;margin:0 0 4px}
+  h2 .n{color:var(--brand);font-variant-numeric:tabular-nums}
+  h2 .time{font-size:13px;font-weight:600;color:var(--faint);margin-left:8px}
+  .lead{color:var(--mut);margin:2px 0 14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .box h4{margin:0 0 6px;font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut)}
+  .box.do h4{color:var(--indigo)} .box.expect h4{color:var(--ok)}
+  code{background:#eef0f6;border-radius:5px;padding:1px 5px;font-family:"Geist Mono",ui-monospace,monospace;font-size:.9em}
+  .notice{border-left:3px solid var(--brand);background:#FFF7F2;padding:12px 14px;border-radius:8px;margin:14px 0;font-size:14.5px}
+  .warn{border-left-color:var(--warn);background:#FFFBEB}
+  .shot{border:2px dashed #cbd2e0;border-radius:12px;background:#fff;color:var(--faint);text-align:center;padding:34px 16px;margin:14px 0;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:12px 0}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);font-size:14px;vertical-align:top}
+  th{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  ul{margin:8px 0;padding-left:20px} li{margin:3px 0}
+  footer{padding:28px 0 60px;color:var(--faint);font-size:13px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <span class="badge">Internal — not linked publicly</span>
+    <p class="kicker">Demo runbook</p>
+    <h1>Remi × Pinch — what to demo, how, and what to expect</h1>
+    <p>A live 5–10 minute walkthrough against the Pinch <b>test environment</b>. Where a step has a caveat, it's called out so nothing surprises you on stage. <em>Remi is named for <b>remittance</b> — the safe movement of money is the one job it exists to do.</em></p>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <h2><span class="n">0</span> — Pre-flight</h2>
+  <p class="lead">Do this before you present.</p>
+  <ul>
+    <li><b>pinch-mcp is live:</b> <code>curl https://&lt;url&gt;/healthz</code> → <code>{"ok":true}</code>, and <code>/meta</code> → <code>"toolCount":23</code>. If not, redeploy (SETUP §3).</li>
+    <li><b><code>PINCH_MCP_URL</code></b> set in CoachPlus (Amplify + <code>.env.local</code>).</li>
+    <li><b>Smoke test green:</b> <code>node demo/test-mcp.mjs</code> with a set of Pinch test keys.</li>
+    <li><b>Signed in</b> as a demo coach (own Pinch keys), on <code>/coach/payments-lab</code>.</li>
+    <li><b>Test card</b> handy: <code>4242 4242 4242 4242</code>, any future expiry/CVC.</li>
+    <li><b>Fallback artifacts:</b> split <code>spl_Bh8QfH0Rai</code>, dishonour <code>pmt_lOb1nrunAStqfs</code>, marked link <code>plk_FQbR4SXNx7hdZr</code>.</li>
+  </ul>
+  <div class="notice warn"><b>One honest caveat:</b> the Pinch sandbox does not fast-forward an overnight direct debit via the API (Time-Travel is accepted but doesn't flip scheduled DD). Demonstrate a <b>dishonour</b> through the synchronous payment-link path (a <code>#code</code> marker + the test card), not by advancing the clock.</div>
+  <div class="shot">[ screenshot: <code>node demo/test-mcp.mjs</code> — all green ]</div>
+</section>
+
+<section>
+  <h2><span class="n">1</span> — The MCP server &amp; its guardrails <span class="time">≈1 min · the foundation</span></h2>
+  <p class="lead">"The base is the first MCP server for Pinch — 23 tools, every write confirm-guarded in the tool layer, not the prompt."</p>
+  <div class="grid">
+    <div class="box do"><h4>Do</h4>On the landing playground (or Claude Desktop), call a write tool <b>without</b> <code>confirm</code> — e.g. <code>pinch_create_refund</code>.</div>
+    <div class="box expect"><h4>Expect</h4>A structured <b>preview</b> (<code>preview:true</code>, <code>wouldDo</code>) and <b>no API call</b>. Re-call with <code>confirm:true</code> to execute. Note the refund cap and that the public endpoint <b>refuses <code>live</code></b>.</div>
+  </div>
+  <div class="shot">[ screenshot: playground preview vs confirmed ]</div>
+</section>
+
+<section>
+  <h2><span class="n">2</span> — Remi designs the billing <span class="time">≈1.5 min · Design</span></h2>
+  <p class="lead">"A coach describes pricing in plain English; Remi turns it into a deterministic blueprint and sets it up — no dev work."</p>
+  <div class="grid">
+    <div class="box do"><h4>Do</h4>In Remi (LyboAI) or the playground: <em>"Set up my swim school: $59/week for 10 weeks with a $100 deposit, direct debit."</em></div>
+    <div class="box expect"><h4>Expect</h4>A blueprint preview (deposit + 10 instalments, first/last dates, term total, indicative fees), then a Pinch <b>plan + subscription</b>. No stored method → <code>pendingSetup:true</code> + a <code>setupLink</code> (the correct two-step). This is the direct-debit term demo.</div>
+  </div>
+  <div class="shot">[ screenshot: Remi blueprint + approval ]</div>
+</section>
+
+<section>
+  <h2><span class="n">3</span> — CoachPlus, in-platform <span class="time">≈3 min · the platform story</span></h2>
+  <p class="lead">The platform now does these itself via the MCP engine. Use the <b>Payments Lab</b> (<code>/coach/payments-lab</code>) so it's fast and reliable on stage.</p>
+
+  <p><b>3a. Simulator — mock mode (instant, no keys).</b> Run the simulator with mode <code>mock</code>.</p>
+  <div class="box expect"><h4>Expect</h4>A scripted scenario + <b>Remi's findings</b>: 3 dishonoured payments (insufficient-funds / expired-card / blocked-by-bank) each diagnosed, a <b>silently-stalled subscription</b> (39 days), and a <b>split</b> with the largest outstanding exposure named. The "Remi catches what you'd miss" moment.</div>
+  <div class="shot">[ screenshot: Payments Lab → mock simulation result ]</div>
+
+  <p><b>3b. Simulator — sandbox mode (real artifacts).</b> Run with mode <code>sandbox</code>, scenario <code>all</code>.</p>
+  <div class="box expect"><h4>Expect</h4>Real ids/links: a <code>#insufficient-funds</code> payment link, a term subscription, a 3-way split, a discounted collect (WELCOME20). Pay the marked link with <code>4242…</code> → it <b>dishonours immediately</b> and appears in the needs-attention feed.</div>
+
+  <p><b>3c. Discount code on a customer payment.</b> Collect $59 with code <code>WELCOME20</code>, Execute.</p>
+  <div class="box expect"><h4>Expect</h4>The hosted link is created for <b>$47.20</b> (20% off), the code + saving recorded. A 100%-off code activates with no Pinch charge.</div>
+
+  <p><b>3d. Refund / cancel.</b> Preview first (capped), then Execute.</p>
+  <div class="shot">[ screenshot: Payments Lab → discount + QR result ]</div>
+</section>
+
+<section>
+  <h2><span class="n">4</span> — QR to get paid <span class="time">≈45 sec · anyone can pay</span></h2>
+  <div class="grid">
+    <div class="box do"><h4>Do</h4>In Payments Lab, run <b>QR</b> for a $59 session with a <code>vendorEmail</code>, Execute.</div>
+    <div class="box expect"><h4>Expect</h4>A hosted link <b>plus a scannable PNG QR</b> and a vendor-notification tag. Scan it with a phone → Pinch's hosted checkout. The "payment received" notification is delivered by the CoachPlus webhook on completion (the MCP server never sends outbound mail).</div>
+  </div>
+  <div class="shot">[ screenshot: QR rendered in Payments Lab + phone scan ]</div>
+</section>
+
+<section>
+  <h2><span class="n">5</span> — Dishonour → diagnosis → recovery <span class="time">≈1 min · Fix</span></h2>
+  <div class="grid">
+    <div class="box do"><h4>Do</h4>Open the needs-attention feed after 3b, pick the failed payment, approve the retry.</div>
+    <div class="box expect"><h4>Expect</h4>A plain-English diagnosis (ownership: customer / merchant / platform), a drafted customer message, and — on approval — a <b>soft</b> failure retried +3 days (the <code>#code</code> stripped from the clone so it succeeds), or a <b>hard</b> failure routed to a fresh card link.</div>
+  </div>
+  <div class="shot">[ screenshot: needs-attention feed + recovery ]</div>
+</section>
+
+<section>
+  <h2><span class="n">6</span> — Security, if asked <span class="time">≈45 sec · the differentiator</span></h2>
+  <p class="lead">"The security model is the product. No card or bank field exists anywhere in the 23 tool schemas — payment details are captured on Pinch's hosted page, never in the app, the model, the transcript or an MCP request."</p>
+  <div class="box expect"><h4>Expect</h4>Confirm-guard preview / <code>live</code> refusal / capped refund — the guardrails hold at the tool layer. Show the data-handling boundaries on the hackathon page.</div>
+</section>
+
+<section>
+  <h2>What's real vs. what's polish</h2>
+  <table>
+    <tr><th>Real, verified against the sandbox</th><th>Polish / caveat</th></tr>
+    <tr><td>Subscriptions (weekly/fortnightly/monthly, terms, deposits), direct-debit collection, dishonour diagnosis + retry, refunds, splits, discounts, QR links, webhook GST invoices.</td><td>The CoachPlus payment <em>actions</em> call the MCP engine today; a native direct-REST path is a Polish-Week item.</td></tr>
+    <tr><td>Remi issue detection: dishonour taxonomy, stall detection, split exposure, needs-attention feed.</td><td>Discounts are a reduced amount, not a first-class Pinch discount object; 100%-off skips Pinch. Time-Travel won't fast-forward overnight DD — demo dishonours via the synchronous link path.</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>If something breaks on stage</h2>
+  <ul>
+    <li>MCP errors / "PINCH_MCP_URL is not set" → §0 pre-flight; fall back to the <b>mock</b> simulator (no keys) and the pre-seeded artifacts.</li>
+    <li>Hosted pay page won't load on a locked network → open it on a phone/hotspot.</li>
+    <li>Anything flaky → the landing <b>playground demo mode</b> replays captured real sandbox outputs offline.</li>
+  </ul>
+</section>
+
+<footer class="wrap">
+  Internal demo runbook · LYBOTECH GROUP · Remi × Pinch · sandbox only. Replace the dashed boxes with dry-run screenshots before the live demo.
+</footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+flowchart TB
+  classDef now fill:#ECFDF5,stroke:#1E9E5A,stroke-width:1.5px,color:#12603A
+  classDef next fill:#F3EFFF,stroke:#7C5CFC,stroke-width:1.5px,stroke-dasharray:5 4,color:#3F2E7E
+  classDef stop fill:#FEF2F2,stroke:#DC2626,stroke-width:1.5px,color:#991B1B
+  classDef plain fill:#FFFFFF,stroke:#D8DAE5,color:#1A1A2E
+
+  I["Operator states the commercial intent<br/>'$59 a week for 10 weeks, $100 deposit'"]:::plain
+  DR["Draft — the tool composes the call and returns<br/>a structured preview. Nothing is created."]:::now
+  VA["Validate — zod schema · currency · merchant binding ·<br/>refund cap · fee preview · dishonour rules"]:::now
+  DEC{"Human approves<br/>the preview?"}
+  NO["No write occurs. Preview returned,<br/>audit event written."]:::stop
+  AP["Approve — the caller repeats the call<br/>with confirm:true"]:::now
+  AO["PIPELINE · Polish Week<br/>Signed short-lived approval object bound to:<br/>payer token · merchant · amount + currency · purpose ·<br/>source token · approving user · expiry · draft hash"]:::next
+  CH{"PIPELINE<br/>Amount, recipient or draft<br/>hash changed since approval?"}
+  RJ["Rejected — approval invalidated,<br/>audit event written"]:::stop
+  EX["Execute — one Pinch write,<br/>sent with an idempotency nonce"]:::now
+  OK["Redacted structured response, plus one audit line<br/>carrying a hashed tenant tag and no parameters"]:::now
+
+  I --> DR --> VA --> DEC
+  DEC -->|"no"| NO
+  DEC -->|"yes"| AP
+  AP --> AO --> CH
+  CH -->|"yes"| RJ
+  CH -->|"no"| EX
+  EX --> OK

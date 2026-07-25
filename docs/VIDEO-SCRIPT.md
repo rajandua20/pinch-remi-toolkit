@@ -1,20 +1,110 @@
-# First Submission — 60-second video script
+# First Submission — 60-second video
 
-Format: screen recording with voiceover. Two live demo beats (1-touch setup,
-failed-payment recovery), one architecture beat, close. Record the demos in
-the LyboAI chat against the sandbox; have the CoachPlus payments panel open in
-a second tab.
+Structured to the pitch coaching session (AIM + rocket). Constraints applied:
+150–190 spoken words (≈ half a page of A4), normal conversation pace, intention
+stated in the first five seconds and restated in the last five, screen footage
+instead of slides.
 
-| t | Screen | Voiceover |
-|---|---|---|
-| 0–8s | Title card: Remi logo mark + "Remi — the AI payments teammate. Powered by Pinch." | "Small businesses lose money in the payment gaps — billing that takes weeks to set up, and direct debits that bounce quietly. Meet Remi." |
-| 8–24s | LyboAI chat: type "Set up my swim school: $59/week for 10 weeks with a $100 deposit, and import these customers…" → show the go-live plan preview → click approve → go-live pack with per-payer setup links | "This is 1-touch setup. Describe your billing, hand over your customer list — Remi designs the structure, provisions it in Pinch, and returns a setup link for every customer. Signup to first collection, one sitting." |
-| 24–40s | Chat: "Anything wrong with my payments?" → dishonoured $59 diagnosed (insufficient funds, safe to retry, drafted note) → approve retry | "When a payment fails, Remi knows why, whose fault it is, and whether a retry is safe — then recovers it with your approval. Nothing moves money without a human yes. That guard lives in the server, not the prompt." |
-| 40–52s | Split screen: CoachPlus Billing & Payments panel + floating Remi; then the Agent Family gallery (Remi + Remi Front Desk tiles); flash `/meta` with toolsHash | "It ships three ways: embedded in a real product — CoachPlus; as deployable agents for any business on LyboAI, including a customer-facing front desk; and as the first Pinch MCP server — 22 tools, security-mapped to the OWASP GenAI standard." |
-| 52–60s | Title card: "Remi. Design · Do · Ask · Fix. Built on Pinch." + URL | "Remi — the payments teammate, powered by Pinch. Every business keeps its own Pinch account; Remi does the work." |
+## AIM
 
-Recording notes:
-- Sandbox only; the dishonoured payment `pmt_lOb1nrunAStqfs` and the split are
-  already live for the Ask/Fix beats.
-- Pre-run the 1-touch preview once so the second take is instant.
-- Say "with your approval" audibly in beat 3 — it is the compliance line.
+**Audience** — the Pinch payments team and the judging panel. Both know
+payments; neither knows LyboAI or CoachPlus. Nothing in the script assumes
+prior knowledge of either product.
+
+**Intention** — in ten words:
+> *Remi sets up and fixes a business's payments by conversation.*
+Explainable to a year 12 student: you tell it what you charge and who your
+customers are, the billing exists; when a payment bounces it tells you why and
+fixes it.
+
+**Messages** — two, one each side of the midpoint, and they are the same
+customer's story two weeks apart rather than two unrelated features:
+
+1. **Setup** — a week of onboarding forms becomes one paragraph and one
+   approval.
+2. **Recovery** — a bounced debit is diagnosed from the dishonour code and
+   recovered, with a human approval gate enforced server-side.
+
+Deliberately cut and carried by the written submission instead: splits and
+party allocation, the customer-facing Front Desk agent, the MCP server tool
+surface, the OWASP mapping, and the three demo businesses. Two messages fit in
+45 seconds; six do not.
+
+## Script — 166 words
+
+### 0–6s · Intention (before anything else)
+
+**Screen:** Remi mark, then straight into the LyboAI chat. No title sequence.
+
+> "Remi sets up a business's payments by conversation, and fixes them when they
+> break. Built on Pinch."
+
+### 6–30s · Message 1 — one-touch setup
+
+**Screen, one unbroken take:** empty swim-school workspace → type the billing
+sentence and paste the family list → the go-live plan preview renders (plan
+structure, payer count, what will be created) → Approve → the go-live pack
+appears with a setup link per family.
+
+> "Here's a swim school with sixty families and nothing set up. I type what I
+> charge — fifty-nine a week for ten weeks, hundred-dollar deposit — and paste
+> the family list. Remi shows me exactly what it will create. I approve. Sixty
+> plans, sixty setup links, one sitting. The last platform that onboarded me
+> took a week of forms to get here."
+
+### 30–52s · Message 2 — the payment that bounces
+
+**Screen:** same workspace, later. Chat: "anything wrong with my payments?" →
+the dishonoured $59 with its code and plain-English cause → the drafted parent
+message → Approve → recovered. Cut to the Pinch dashboard showing the retry.
+
+> "Two weeks later a debit bounces. I ask Remi what's wrong. It reads the
+> dishonour code — insufficient funds, safe to retry — drafts the message to
+> the parent, and waits. I approve, and it recovers. Nothing moves money
+> without that yes. The approval gate sits in the server, not in the prompt."
+
+### 52–60s · Intention restated + the hate
+
+**Screen:** the setup links and the recovered payment side by side, held still.
+Closing frame: "Remi. Powered by Pinch." + pinch.lybotechgroup.com
+
+> "Remi sets up payments by conversation, and fixes them when they break. I hate
+> being made to spend a week onboarding before I can take one payment. Remi
+> removes that. Powered by Pinch."
+
+The closing line answers the metric from the Pinch briefing — what do you hate
+about the world, and what does your product remove. It is a real experience,
+not a constructed one; say it as one.
+
+## Recording notes
+
+- **Pace:** normal conversation, not presentation. 166 words across 60 seconds
+  sits mid-band (150–190). Do not speed up to add content back in — if it runs
+  long, cut the "last platform that onboarded me" sentence from Message 1
+  rather than compressing delivery, since the same point lands in the close.
+- **Anxiety:** Post-it note with a smiley face stuck behind the camera lens, at
+  eye line. Talk to it.
+- **Movie in their mind:** the sixty-families count, the stack of setup links,
+  and the single red failed payment are the pictures. Hold each long enough to
+  register; the voiceover states the claim once and does not repeat it.
+- **No PowerPoint.** Two title frames only (open mark, close mark); everything
+  between them is live screen.
+- **Takes:** record each message block as one continuous take — a cut inside
+  Message 1 undercuts "one sitting". Pre-run the setup preview once so the
+  approval renders instantly on the recorded take.
+- **Environment:** sandbox (`test`) only. Seed sixty families before recording
+  so the count on screen is real, and use the existing dishonoured payment
+  `pmt_lOb1nrunAStqfs` (insufficient-funds) for Message 2.
+- **Audible line:** "nothing moves money without that yes" — the compliance
+  sentence for this audience. Do not clip it.
+
+## Cut from this video (carried elsewhere)
+
+| Capability | Where it lands instead |
+|---|---|
+| Split payments / party allocation | Written submission; demo night |
+| Remi Front Desk (customer-facing agent) | Written submission; `docs/ACTOR-GUIDE.md` |
+| Pinch MCP server, 22 tools, `toolsHash` | Written submission; `SECURITY.md` |
+| OWASP GenAI minimum-bar mapping | `SECURITY.md` standards-mapping table |
+| Three demo businesses, BYO keys | `demo/DEMO-BUSINESSES.md`; demo night |
+| CoachPlus embedded deployment | Written submission; demo night |

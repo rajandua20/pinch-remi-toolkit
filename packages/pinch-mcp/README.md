@@ -12,9 +12,10 @@ human approves before any money moves**.
 - **13 read tools** — payments, failed-payment triage, payers, subscriptions (with
   stall detection), events, a UI-ready cashflow summary, per-payer statements,
   and split-bill status tracking.
-- **7 guarded write tools** — payment links, dishonour retries, capped refunds,
-  recurring-billing setup/cancellation (plan + subscription lifecycle),
-  multi-party bill splits, and a deterministic billing-blueprint compiler.
+- **10 guarded write tools** — payment links, QR payment links, dishonour
+  retries, capped refunds, recurring-billing setup/cancellation (plan +
+  subscription lifecycle), multi-party bill splits, a deterministic
+  billing-blueprint compiler, bulk payer import, and 1-touch business onboarding.
   Every write requires `confirm: true`; without it the tool returns a structured
   preview and calls **no** API.
 - **Dishonour diagnosis map** — every failure code translated to plain English
@@ -130,7 +131,7 @@ Three deployment patterns:
    the server refuses `x-pinch-env: live` outright, which is the safe default:
    a shared endpoint should only ever touch test data.
 3. **Library import** — `buildServer(configOverride?)` is exported from
-   `dist/index.js`; embed the fully-wired `McpServer` (all 22 tools) in your
+   `dist/index.js`; embed the fully-wired `McpServer` (all 23 tools) in your
    own Node process and connect whatever transport you like.
 
 ## Tool catalog
@@ -151,6 +152,7 @@ Three deployment patterns:
 | `pinch_get_split_status` | read | Who's paid / pending / failed on a split bill, exposure risk (largest outstanding party + days), and chase-up actions — reconstructed entirely from Pinch data |
 | `pinch_settlement_summary` | read | "See the money": bank transfers with per-transfer line items (settlements, fees, clawbacks) plus the unsettled bucket — collected but not yet transferred |
 | `pinch_create_payment_link` | **write** | Hosted checkout link for a payer (matched/created by email) — the re-collection tool |
+| `pinch_create_payment_qr` | **write** | Hosted payment link rendered as a scannable PNG QR, with an optional vendor-notification tag (delivered host-side) |
 | `pinch_retry_payment` | **write** | Clones a dishonoured payment into a new scheduled payment (default +3 days); warns on hard failures |
 | `pinch_create_refund` | **write** | Full/partial refund, hard-capped by `PINCH_MAX_REFUND_CENTS` |
 | `pinch_create_subscription` | **write** | Recurring billing (weekly/fortnightly/monthly) incl. term limits (`termPayments`/`endDate`), deposits, and plan-metadata attribution; degrades to `pendingSetup` + `setupLink` when the payer has no stored payment method (a Pinch requirement) |
@@ -321,9 +323,11 @@ Everything below is **test-env only** and how the smoke test works:
   to camelCase before use.
 - **Retries** — rate limits are undocumented, so 429/5xx (and network errors)
   are retried twice with jittered backoff; 403 triggers one token refresh.
-- **Idempotency** — write tools send Pinch `nonce` values
+- **Idempotency** — the retry and refund tools send Pinch `nonce` values
   (`pinch-mcp-retry-<paymentId>-<date>`, `pinch-mcp-refund-<paymentId>-<cents>`)
-  so an accidental double-call cannot double-charge or double-refund.
+  so an accidental double-call cannot double-charge or double-refund. A
+  caller-supplied idempotency key on **every** write tool is a scheduled
+  hardening item (see SECURITY.md → "Production roadmap"), not present today.
 - **Pagination** — list tools follow the `{page,pageSize,totalPages,totalItems,data[]}`
   envelope up to 5 pages and report `truncated: true` beyond that.
 - **Dishonour typing on list items** — `GET /payments/processed` list items carry

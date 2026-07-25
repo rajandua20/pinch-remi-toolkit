@@ -3,7 +3,7 @@
 ## Concept: front office vs back office
 
 **Remi is the back office**: the merchant's own payments teammate, talking to the
-business owner with the full 16-tool kit — cashflow, failure diagnosis, retries,
+business owner with the full 22-tool kit — cashflow, failure diagnosis, retries,
 refunds, splits.
 
 **Front-desk payments is the front office**: the business's customer-facing
@@ -47,8 +47,13 @@ because the person in the chat is not the merchant.
 
 ## The aiConfig.tools JSON (minimal subset)
 
-Replace `{{MCP_SERVER_URL}}` with the tenant's pinch-mcp endpoint. Deposit and
-session verticals take ONLY the first entry; membership verticals take both.
+Deposit and session verticals take ONLY the first entry; membership verticals
+take both. The `url` below is now **optional** — with the panel-based MCP
+connection (next section) each tool inherits `connection.serverUrl`
+(`serverUrl = tool.url || connection.serverUrl`), so you can drop it and let the
+org's connection supply the endpoint. **Never add the Pinch secret as a tool
+`headers` value** — credentials live on the connection and `bots.ts` rejects
+credential-named headers on a tool.
 
 ```json
 [
@@ -81,27 +86,44 @@ PAYMENTS (front desk) — you may collect payment from THIS customer only, for t
 - Never create links for anyone but this customer, never accept card numbers in chat; hand failures, disputes and refunds to the team.
 ```
 
-## Applying to a deployed agent (same PATCH mechanics as remi-capability.md)
+## Applying to a deployed agent (panel-based — the MCP connection carries URL + keys)
 
+Credentials and endpoint are configured once on the org's **MCP Server connection**
+in the dashboard Integrations panel, not per tool. This is the same per-org
+resolution Remi uses (`mcpOrg.ts` + orgId plumbing):
+
+1. Dashboard → Integrations → **MCP Server** → set serverUrl to the tenant's
+   pinch-mcp endpoint and enter that business's **own** Pinch Merchant ID / Secret
+   Key in the connector's credential fields. Test connection → tools resolve.
+2. Add the front-desk tool tiles to the agent (link only, or link + subscription
+   for membership verticals). Each tile is `type:"mcp"` with the tool `name`; omit
+   `url` to inherit the connection's serverUrl. **Do not put the Pinch secret in a
+   tool `headers` block** — the platform attaches credentials from the org's
+   connection on host match, and `bots.ts`' `superRefine` rejects credential-named
+   headers baked onto a tool.
+3. Add the **price-list knowledge snippet** (the amounts rule quotes only from
+   there) and re-publish.
+
+For automation the same result is a PATCH — but credentials still live on the
+connection, never in the tool payload:
 ```
 PATCH /orgs/:orgId/bots/:botId
 {
   "aiInstructions": "<agent's existing instructions>\n\n<the block above>",
   "guardrails": { ...existing, "restrictToKnowledge": false },
   "escalationRules": { ...existing, "onLowConfidence": false },
-  "aiConfig": { "toolCalling": true, "tools": [ /* existing tools + the subset above */ ] }
+  "aiConfig": { "toolCalling": true, "tools": [ /* existing tools + the subset above (no url/headers needed) */ ] }
 }
 ```
-Then add a **price-list knowledge snippet** (the amounts rule quotes only from
-there) and re-publish. Same gotchas as the Remi recipe: `aiConfig.tools` is
-replaced wholesale (include existing tools); `aiInstructions`/`guardrails`/
-`escalationRules` are full replacements; 8,000-char instructions cap (family
-agents sit ~3.0-3.2k, so the composed total is ~3.9-4.1k — plenty of headroom);
-one tool round per turn, so preview and confirm are always separate customer-
-visible turns. `restrictToKnowledge:false` is required on Sage/Max (they ship
-with `true`, which forbids tool-grounded turns — KB retrieval still injects the
-price list either way); `onLowConfidence:false` stops the confidence heuristic
-replacing the link-delivery turn with the fallback message.
+Same gotchas as the Remi recipe: `aiConfig.tools` is replaced wholesale (include
+existing tools); `aiInstructions`/`guardrails`/`escalationRules` are full
+replacements; 8,000-char instructions cap (family agents sit ~3.0-3.2k, so the
+composed total is ~3.9-4.1k — plenty of headroom); one tool round per turn, so
+preview and confirm are always separate customer-visible turns.
+`restrictToKnowledge:false` is required on Sage/Max (they ship with `true`, which
+forbids tool-grounded turns — KB retrieval still injects the price list either
+way); `onLowConfidence:false` stops the confidence heuristic replacing the
+link-delivery turn with the fallback message.
 
 ## Per-vertical notes
 
