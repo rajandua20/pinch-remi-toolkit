@@ -117,6 +117,39 @@ NEXT_PUBLIC_LYBO_WIDGET_KEY=   # the back-office Remi bot's widgetKey
 ```
 Rebuild → Remi floats bottom-right on coach pages.
 
+## 6b — Landing page → pinch.lybotechgroup.com (Vercel)
+```powershell
+cd C:\Users\rajan\Claude\Projects\pinch-remi-toolkit\landing
+npx vercel login          # once
+npx vercel --prod         # deploys this folder as a static site
+```
+Then Vercel dashboard → the project → Settings → **Domains** → add
+`pinch.lybotechgroup.com`, and at your DNS provider for lybotechgroup.com add:
+`CNAME  pinch  →  cname.vercel-dns.com`. Propagation is usually minutes.
+Pages: `/` (landing + playground) and `/hackathon.html` (the feedback page —
+this is the link to send Pinch dev + marketing contacts).
+
+## 6c — Three demo businesses (BYO keys — apps already created in Pinch)
+1. `cd theCoachPlus` → `Copy-Item scripts\demo-coaches.local.json.example scripts\demo-coaches.local.json`
+   → fill each entry's `pinch.merchantId`/`secretKey` from the matching Pinch
+   app (**driving-instructor**, **business-coach**, **glenunga-swim-school**)
+   and set passwords. Logins use Gmail plus-addressing — all mail arrives in
+   YOUR inbox, one real mailbox:
+   `rajan.dua20+driving@gmail.com` · `rajan.dua20+bizcoach@gmail.com` · `rajan.dua20+swim@gmail.com`
+   (**email/password sign-in only** — Google sign-in does not work for + aliases).
+2. `npm run seed:demo-coaches` — creates auth users, tenants, published coach
+   profiles + websites + app configs, and each business's own Pinch keys in
+   `coachSecrets/` (Remi switches on per coach automatically). Idempotent.
+3. Per business, run its 1-touch onboarding from
+   `pinch-remi-toolkit\demo\DEMO-BUSINESSES.md` (via that business's Remi on
+   LyboAI, or the playground with that app's keys).
+4. LyboAI: three orgs (same plus-alias emails), each org's MCP connection
+   carries that business's keys; deploy Remi + Remi Front Desk per org; put
+   each Front Desk widgetKey on the tenant via the seed json (`lyboWidgetKey`)
+   and re-run the seed.
+5. Firestore rules: ensure `coachSecrets/**` denies ALL client access (server
+   SDK only) before pushing to prod.
+
 ## 7 — Sandbox demo state (unchanged, still live)
 - Dishonoured payment `pmt_lOb1nrunAStqfs` (insufficient-funds); spare marked
   link: https://pay.getpinch.com.au/pay/plk_FQbR4SXNx7hdZr
