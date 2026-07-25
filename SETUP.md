@@ -1,19 +1,57 @@
-# Remi × Pinch — Setup & Rollout Runbook (v2 — Sat 25 Jul)
+# Remi × Pinch — Setup & Rollout Runbook (v3 — Sat 25 Jul, evening)
 
-Supersedes v1. Order matters; each phase unblocks the next.
+Supersedes v2. Everything below reflects the current committed state:
+pinch-mcp **22 tools** + two security passes + platform mode; LyboAI presets v2
+(back-office Remi + **Remi Front Desk**, per-org Pinch credential fields on the
+MCP connector); CoachPlus unchanged since ws3e. Order matters.
 
 ## 0 — Every terminal, first line (Node fix)
 ```powershell
-$env:Path = "$env:APPDATA\nvm\v20.18.0;$env:Path"   # matched node 20 + npm 10 pair
+$env:Path = "$env:APPDATA\nvm\v20.18.0;$env:Path"
 ```
-Permanent fix later: remove `\nvm\v17.8.0` PATH entries / consolidate on one Node.
 
 ---
 
-## 1 — Push all three repos
+## 1 — Fix prod database connectivity (blocks sign-in AND seeding)
 
-### 1a. theCoachPlus → main (⚠️ triggers Amplify PROD build)
-**First**, Amplify Console → Environment variables — all seven:
+The connection string must be the **Session Pooler** form in TWO places
+(Supabase Dashboard → Connect → Session pooler tab):
+`postgresql://postgres.<project-ref>:<password>@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres`
+
+1. **GitHub secret** (used by Migrate DB workflow): repo `lyboai-platform` →
+   Settings → Secrets → Actions → `SUPABASE_DATABASE_URL` → update.
+2. **GCP secret** (used by the running API — this fixed Google sign-in):
+   ```powershell
+   "postgresql://postgres.<ref>:<password>@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres" | Out-File -Encoding ascii -NoNewline dburl.txt
+   gcloud secrets versions add lyboai-database-url --data-file=dburl.txt
+   Remove-Item dburl.txt
+   gcloud run services update lyboai-api --region australia-southeast1 --update-env-vars "DEPLOY_BUMP=$(Get-Date -Format yyyyMMddHHmmss)"
+   ```
+   Verify: `gcloud run services logs read lyboai-api --region australia-southeast1 --limit 20`
+   → the repeating "worker loop error" should stop; Google sign-in works.
+
+## 2 — Push all three repos
+
+### 2a. pinch-remi-toolkit
+Local commits are already made (security passes, 1-touch tools, platform mode,
+fresh dist). Delete the `_to_delete\` folder at the repo root first (stale git
+locks I couldn't remove — safe to delete).
+```powershell
+cd C:\Users\rajan\Claude\Projects\pinch-remi-toolkit
+git log --oneline -5          # expect: 7aaf187, c922c92, fd5b999, ...
+git push origin main          # first push: gh repo create pinch-remi-toolkit --private --source . --push
+```
+
+### 2b. lyboai-platform
+```powershell
+cd C:\Users\rajan\Claude\Projects\lyboai-platform
+git log --oneline -3          # expect: 0ec86aa, d1a6834
+git push origin main          # CI runs typecheck+tests automatically
+```
+Also delete `_to_delete\` here when convenient (gitignored).
+
+### 2c. theCoachPlus — set Amplify env FIRST, then push
+Amplify Console → Environment variables (all seven):
 ```
 PINCH_MERCHANT_ID=app_test_kPR4h10nCQrQ8a
 PINCH_SECRET_KEY=<sk_test_…>
@@ -21,87 +59,88 @@ PINCH_ENV=test
 PAYMENTS_PROVIDER=pinch
 SUBSCRIPTION_PROVIDER=pinch
 PINCH_WEBHOOK_SECRET=whsec_s6aMlYzYW8JZsypJZjdSRztp91KHOmx0
-NEXT_PUBLIC_LYBO_WIDGET_URL=<later, when LyboAI prod is up — see 3c>
-NEXT_PUBLIC_LYBO_WIDGET_KEY=<later>
+PINCH_DEMO_TENANT_ID=<your coach/tenant id>
 ```
-Then:
+(NEXT_PUBLIC_LYBO_WIDGET_URL / _KEY come later — step 6.)
 ```powershell
 cd C:\Users\rajan\Claude\Projects\theCoachPlus
-npm run typecheck                       # gate
-git status                              # .env.local absent; consider gitignoring data\ (PII check!)
-git add . && git status && git commit -m "Pinch platform + Remi floating assistant + billing panel"
-git push origin main
+npm run typecheck && git push origin main    # triggers Amplify prod build
 ```
-Verify after build: https://thecoachplus.com/coach/payments (digest + dishonoured $59 card; "Billing & Payments" in sidebar).
+The "Pinch isn't connected yet" empty state on /coach/payments disappears once
+these vars are in and the build finishes.
 
-### 1b. lyboai-platform → main
-```powershell
-cd C:\Users\rajan\Claude\Projects\lyboai-platform
-git checkout main && git pull origin main
-git merge pinch-remi --no-edit          # if branch exists; else add/commit on main
-git add apps/api/src docs/pinch-remi && git commit -m "Remi agent preset + MCP bridge + merged seeds" 
-git push origin main                    # CI runs automatically (typecheck+vitest+build)
-```
-Note: latest seed files (agent preset + template exports) were committed AFTER any earlier commit — make sure they're included (`git status` before commit).
-
-### 1c. pinch-remi-toolkit → new private repo
-```powershell
-cd C:\Users\rajan\Claude\Projects\pinch-remi-toolkit
-git init -b main
-git add . && git status                 # .env must NOT appear (only .env.example)
-git commit -m "pinch-mcp (22 tools) + Remi toolkit + landing"
-gh repo create pinch-remi-toolkit --private --source . --push
-#  or: create empty repo on github.com, then git remote add origin <url> && git push -u origin main
-```
-Then tell Claude the repo URL → gets wired into the landing page buttons.
-
----
-
-## 2 — Production pipelines
-
-### 2a. CoachPlus (Amplify) — automatic on the 1a push. Watch the build; env is inlined via next.config.mjs.
-### 2b. LyboAI (manual, after CI green)
-1. GitHub → Actions → **Migrate DB** → Run workflow → **tick "seed"** (loads mcp connector entry, both Remi templates, and the 9-agent family incl. Remi into Supabase prod). If prod was seeded before, confirm seed.ts upserts (it's your original design).
-2. Actions → **Deploy** → Run workflow (Cloud Run API + Firebase Hosting dashboard/widget).
-### 2c. Hosted pinch-mcp (Cloud Run)
+## 3 — Redeploy hosted pinch-mcp (REQUIRED — old revision lacks everything from today)
 ```powershell
 cd C:\Users\rajan\Claude\Projects\pinch-remi-toolkit\packages\pinch-mcp
 gcloud run deploy pinch-mcp --source . --region australia-southeast1 --allow-unauthenticated
-curl https://pinch-mcp-238547086112.australia-southeast1.run.app/healthz
-curl https://pinch-mcp-238547086112.australia-southeast1.run.app/meta
+curl https://<printed-url>/healthz     # {"ok":true}
+curl https://<printed-url>/meta        # toolCount: 22 + toolsHash present
 ```
-**Deployed URL: https://pinch-mcp-238547086112.australia-southeast1.run.app** (⚠️ redeploy required once after the Sat security-hardening commit — the first deploy predated the multi-tenant server). Prod LyboAI's mcp connector uses `https://pinch-mcp-238547086112.australia-southeast1.run.app/mcp`.
+**Send Claude the printed URL.** If it differs from
+`https://pinch-mcp-238547086112.australia-southeast1.run.app`, the landing
+page, this guide, and `.github/workflows/migrate.yml` (PINCH_MCP_URL) need a
+one-pass update.
 
----
+## 4 — Re-seed LyboAI (REQUIRED — presets/catalog/templates all changed)
+- **Local:** `docker compose up -d` at repo root, then in `apps\api`:
+  ```powershell
+  $env:PINCH_MCP_URL = "https://<cloud-run-url>/mcp"
+  npm run db:migrate; npm run db:seed
+  ```
+- **Prod:** GitHub → Actions → **Migrate DB** → Run workflow → tick **seed**
+  (PINCH_MCP_URL is baked into the workflow). Needs step 1 done first.
 
-## 3 — LyboAI activation (local AND prod — same steps)
-1. **RE-SEED (required — seed files changed):** local: `npm run db:seed` in apps\api (Docker postgres up); prod: the Migrate+seed workflow (2b).
-2. Dashboard → **Your Agent Family** → **Remi — AI Payments & Billing Agent** → **Deploy** (one click).
-3. Integrations → connect **MCP**: serverUrl = local `http://localhost:3333/mcp` (pinch-mcp running `--http 3333 --cors`; Docker: `host.docker.internal`) or prod = `https://pinch-mcp-238547086112.australia-southeast1.run.app/mcp` (⚠️ verify this URL after redeploy — `gcloud run services list --region australia-southeast1`). Test connection → 22 tools.
-4. Publish Remi (draft → live) → open the bot's **Widget/Channel** settings → copy its **widgetKey**; add your CoachPlus domain(s) to allowed domains (`http://localhost:3000`, `https://thecoachplus.com`).
-5. Chat test: "How did we do this week?" · "Who owes on the studio rent split?" · "Bill Sarah $59/week for a 10-week term with a $100 deposit."
+## 5 — Deploy the agents (local AND prod dashboards, same steps)
+1. **Delete the old test "Remi - CoachPlus" agent** — its tools point at
+   `http://localhost:8787/mcp` from the pre-URL seed.
+2. Dashboard → Your Agent Family → now **10 tiles** →
+   **Remi — AI Payments & Billing Agent** (back office) → Deploy.
+3. Integrations → **MCP Server** → connect:
+   - serverUrl: `https://<cloud-run-url>/mcp` (local dev alternative: `http://localhost:3333/mcp` with pinch-mcp running `--http 3333 --cors`)
+   - **Pinch Merchant ID / Pinch Secret Key**: the org's OWN Pinch keys (new fields — this is how each business brings their own account)
+   - Pinch environment: `test`
+   - (Acting-as sub-merchant: leave empty — only for licensed aggregator platforms)
+   - Test connection → 22 tools.
+4. Publish Remi → Widget/Channel settings → copy **widgetKey** → add allowed
+   domains (`http://localhost:3000`, `https://thecoachplus.com`).
+5. Optionally deploy **Remi Front Desk** (customer-facing tile, indigo) the same
+   way — this is the agent for a coach's website/app channels.
+6. Chat test: "Set up my swim school: $59/week for 10 weeks with a $100 deposit,
+   and import these customers: Priya priya@example.com, Marcus marcus@example.com"
+   → preview → approve → go-live pack with setup links. That's the 1-touch demo.
 
-## 4 — CoachPlus ↔ Remi floating bubble
-Set (locally in `.env.local`; prod in Amplify env) once step 3 gives you values:
+## 6 — CoachPlus ↔ Remi widget
+Once step 5 gives values, set locally in `.env.local` and in Amplify env:
 ```
-NEXT_PUBLIC_LYBO_WIDGET_URL=  # local: the built/served widget.js from apps\widget; prod: https://lyboai-agents.web.app/widget.js
-NEXT_PUBLIC_LYBO_WIDGET_KEY=  # the Remi bot's widgetKey
+NEXT_PUBLIC_LYBO_WIDGET_URL=   # prod: https://lyboai-agents.web.app/widget.js
+NEXT_PUBLIC_LYBO_WIDGET_KEY=   # the back-office Remi bot's widgetKey
 ```
-Rebuild/restart → Remi floats bottom-right on every coach page. (CSP for the widget origins is already in next.config.mjs.)
+Rebuild → Remi floats bottom-right on coach pages.
 
-## 5 — Sandbox demo data (state)
-- Real dishonoured payment exists: `pmt_lOb1nrunAStqfs` (insufficient-funds). Spare marked link: https://pay.getpinch.com.au/pay/plk_FQbR4SXNx7hdZr
-- Studio-rent split `spl_Bh8QfH0Rai`: Priya $600 **paid**, Marcus $360 + Southside $240 pending — exposure story live.
-- Test card `4242 4242 4242 4242`; DD payments process in the overnight run.
+## 7 — Sandbox demo state (unchanged, still live)
+- Dishonoured payment `pmt_lOb1nrunAStqfs` (insufficient-funds); spare marked
+  link: https://pay.getpinch.com.au/pay/plk_FQbR4SXNx7hdZr
+- Split `spl_Bh8QfH0Rai`: Priya $600 paid; Marcus $360 + Southside $240 pending.
+- Test card `4242 4242 4242 4242`; DD processes overnight.
 
-## 6 — Hackathon admin
-- Slack `#hackathon-help-2026`: solo/team question (rules say teams of 2–4) — still the top open risk.
-- First Submission **Sun 20:00 AEST**: https://getpinch.com.au/hackathon-first-submission (60-sec YouTube video — script coming from Claude). Final: 31 Jul. Demo night RSVP: https://luma.com/m5baswti
+## 8 — Hackathon admin
+- First Submission Sun 20:00 AEST: https://getpinch.com.au/hackathon-first-submission
+  (60-sec video — script: `docs/VIDEO-SCRIPT.md` in the toolkit). Final 31 Jul.
+  Demo night RSVP: https://luma.com/m5baswti
+- Slack solo/team question still open. Also worth asking: "does the sandbox
+  support OAuth connect for apps (redirect URLs)?" and "can sandbox apps create
+  managed merchants via API?"
+- Regenerate the exposed LIVE Pinch keys (portal → API keys) before Final.
 
 ## Troubleshooting quick hits
-- `minimatch is not a function` → wrong npm on PATH → §0 line.
-- Seed ECONNREFUSED :5433 → `docker compose up -d` at lyboai root, then `db:migrate` → `db:seed`.
-- 502 from /api/remi/summary → dev now returns a `detail` field + logs `[remi/summary] failed:` — paste it to Claude. Usual cause: wrong `PINCH_SECRET_KEY`.
-- `invalid_client` on smoke → re-copy sk_test from portal Development Keys (no quotes/spaces; not the live key).
-- Widget bubble absent → both NEXT_PUBLIC vars set? rebuilt after setting? domain in bot's allowed list? Check browser console for CSP blocks.
-- Amplify page says payments not configured → env var missing from console OR not in next.config env block (it is, if unchanged).
+- `minimatch is not a function` → §0 PATH line.
+- Google sign-in 500 / "worker loop error" every ~5s → §1 (DB secret).
+- Migrate workflow ETIMEDOUT → §1 GitHub secret (pooler form) + Supabase
+  Network Restrictions off + project not paused.
+- Agent tools all point at localhost:8787 → deployed before re-seed; delete the
+  agent, re-seed with PINCH_MCP_URL, redeploy from the Family.
+- Tools error in chat → Integrations → MCP → Test; check Pinch keys in the
+  connection (auth errors = wrong sk_test); pinch_health tool reports env + actingAs.
+- /meta shows toolCount 20 or no toolsHash → old Cloud Run revision; redeploy §3.
+- Widget bubble absent → both NEXT_PUBLIC vars set + rebuilt + domain in bot's
+  allowed list; check console for CSP blocks.
