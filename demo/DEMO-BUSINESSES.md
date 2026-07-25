@@ -21,7 +21,7 @@ Setup per business (5 minutes each):
 
 ## 1. RoadReady Driving School (driving instructor)
 
-**Pinch app name:** `RoadReady Driving School (demo)`
+**Pinch app name:** `driving-instructor` (already created)
 **Billing model:** per-lesson payment links + a 10-lesson prepaid package with
 deposit; learners often pay per lesson, parents often buy packages.
 
@@ -70,7 +70,7 @@ with a dishonour-marked card to give this business its own failed payment.
 
 ## 2. Elevate Business Coaching (business coach)
 
-**Pinch app name:** `Elevate Business Coaching (demo)`
+**Pinch app name:** `business-coach` (already created)
 **Billing model:** monthly retainers (recurring), one-off strategy intensives,
 and an invoice-style split for a co-delivered workshop.
 
@@ -113,14 +113,14 @@ for the exposure story.
 
 ---
 
-## 3. BlueFin Swim School (swimming school)
+## 3. Glenunga Swim School (swimming school)
 
-**Pinch app name:** `BlueFin Swim School (demo)`
+**Pinch app name:** `glenunga-swim-school` (already created)
 **Billing model:** the classic term model — weekly debits over a 10-week term
 with an annual registration fee; multiple children per family.
 
 **Onboarding prompt:**
-> Set up BlueFin Swim School. Billing: Term 3 swimming is $59 per week for 10
+> Set up Glenunga Swim School. Billing: Term 3 swimming is $59 per week for 10
 > weeks per child, plus a $45 annual registration one-off. Import these
 > families and enrol them in Term 3: Emma Wilson emma.wilson@example.com
 > 0400 333 444, Jack Wilson via emma.wilson@example.com, Chloe Martinez
@@ -129,7 +129,7 @@ with an annual registration fee; multiple children per family.
 **Raw payload:**
 ```json
 {
-  "businessName": "BlueFin Swim School",
+  "businessName": "Glenunga Swim School",
   "components": [
     { "kind": "term", "name": "Term 3 Swimming", "amountCents": 5900, "interval": "weekly", "termPayments": 10 },
     { "kind": "one_off", "name": "Annual Registration", "amountCents": 4500 }
@@ -151,7 +151,7 @@ with an annual registration fee; multiple children per family.
 - Q: My payment failed, what happens? → A: No stress — it retries after we
   contact you, or I can send a fresh payment link. Ask me to check the status.
 
-**Fix-demo:** BlueFin doubles as the CoachPlus demo coach (this mirrors the
+**Fix-demo:** Glenunga doubles as the CoachPlus demo coach (this mirrors the
 existing CoachPlus scenario — term sub + the $59 dishonour story).
 
 ---
@@ -165,5 +165,5 @@ existing CoachPlus scenario — term sub + the $59 dishonour story).
    retainer, term) provisioned by describing them in a sentence.
 3. **One failure, one recovery** — RoadReady's dishonoured lesson payment:
    diagnose → approve → recover.
-4. **The customer side** — BlueFin's Front Desk on the CoachPlus-built site:
+4. **The customer side** — Glenunga's Front Desk on the CoachPlus-built site:
    a parent asks "what do I owe?" and pays by hosted link.
