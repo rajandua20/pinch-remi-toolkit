@@ -813,6 +813,218 @@ function daysFromTo(from: string, to: string): number {
 }
 
 // ---------------------------------------------------------------------------
+// Blueprint provisioning + bulk payer import — shared internals used by
+// pinch_design_billing, pinch_import_payers and pinch_onboard_business.
+// ---------------------------------------------------------------------------
+
+interface ImportPayerInput {
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobile?: string;
+}
+
+/**
+ * Batch find-or-create payers by email (same identity rule as ensurePayer).
+ * Sequential; one failure NEVER aborts the batch. Returns ids/emails/errors
+ * only — full input records are never echoed back into the result.
+ */
+async function importPayerBatch(
+  client: PinchClient,
+  payers: ImportPayerInput[],
+): Promise<{
+  ok: Array<{ payerId: string; email: string; created: boolean }>;
+  failed: Array<{ email: string; error: string }>;
+}> {
+  const ok: Array<{ payerId: string; email: string; created: boolean }> = [];
+  const failed: Array<{ email: string; error: string }> = [];
+  for (const p of payers) {
+    try {
+      const { items } = await client.getAllPages<AnyRecord>("/payers", { filter: p.email });
+      const match = items.find((x) => (x.emailAddress ?? "").toLowerCase() === p.email.toLowerCase());
+      if (match) {
+        ok.push({ payerId: match.id, email: p.email, created: false });
+        continue;
+      }
+      // Field names as used by POST /payers elsewhere in this file (and as
+      // returned by GET /payers): firstName, lastName, emailAddress, mobileNumber.
+      const created = await client.post<AnyRecord>("/payers", {
+        firstName: p.firstName,
+        lastName: p.lastName,
+        emailAddress: p.email,
+        ...(p.mobile ? { mobileNumber: p.mobile } : {}),
+      });
+      ok.push({ payerId: created.id, email: p.email, created: true });
+    } catch (err) {
+      failed.push({ email: p.email, error: err instanceof PinchApiError ? err.message : String(err) });
+    }
+  }
+  return { ok, failed };
+}
+
+/**
+ * Plan spec + derived dates for a subscription-shaped component (membership /
+ * term / package-with-instalments), anchored at `anchor`. Pure — extracted
+ * verbatim from the pinch_design_billing provisioning loop.
+ */
+function buildComponentPlanSpec(
+  c: DesignComponentInput,
+  anchor: string,
+  metadata?: string,
+): { spec: PlanSpec; subStart: string; firstChargeCents: number } {
+  const isTermLike = c.termPayments !== undefined;
+  const dep = c.depositCents;
+  const firstRecurring = dep !== undefined ? addIntervals(anchor, c.interval!, 1) : anchor;
+  const subStart = dep !== undefined ? anchor : firstRecurring;
+  const freq = INTERVAL_MAP[c.interval!];
+  const spec: PlanSpec = {
+    name: `${c.name} (${c.interval} ${formatAud(c.amountCents)}${isTermLike ? `, ${c.termPayments} payments` : ""}${dep !== undefined ? `, ${formatAud(dep)} deposit` : ""})`.slice(0, 200),
+    ...(metadata !== undefined ? { metadata } : {}),
+    recurringPayment: {
+      amountInCents: c.amountCents, description: c.name,
+      ...(dep !== undefined ? { startDateOffset: daysFromTo(subStart, firstRecurring), startDateInterval: "days" as const } : {}),
+      frequencyOffset: freq.frequencyOffset, frequencyInterval: freq.frequencyInterval,
+      endType: isTermLike ? "number-of-payments" : "never",
+      ...(isTermLike ? { endAfterNumberOfPayments: c.termPayments } : {}),
+      cancelPlanOnFailure: false,
+    },
+    ...(dep !== undefined
+      ? { fixedPayments: [{ amountInCents: dep, description: `${c.name} — deposit`, scheduledDateOffset: 0, scheduledDateInterval: "days" as const, cancelPlanOnFailure: false }] }
+      : {}),
+  };
+  return { spec, subStart, firstChargeCents: dep ?? c.amountCents };
+}
+
+/** Find-or-create a plan structurally matching the spec (plans can't be edited
+ *  once subscribed — a mismatch always means a new plan, never a mutation). */
+async function ensurePlan(client: PinchClient, spec: PlanSpec): Promise<AnyRecord> {
+  const { items: plans } = await client.getAllPages<AnyRecord>("/plans");
+  return plans.find((p) => planMatchesSpec(p, spec)) ?? (await client.post<AnyRecord>("/plans", spec));
+}
+
+/**
+ * Bind a payer to a plan — or, when the payer has no stored payment source
+ * (Pinch rejects the subscription outright; verified API behaviour), degrade
+ * to the pendingSetup two-step from pinch_create_subscription: a hosted setup
+ * link that collects the first charge AND stores the payment method.
+ */
+async function subscribeOrSetup(
+  client: PinchClient,
+  payerId: string,
+  planId: string,
+  subStart: string,
+  firstChargeCents: number,
+  setupDescription: string,
+): Promise<{ subscriptionId: string | null; status: string | null; setupUrl: string | null; pendingSetup: boolean }> {
+  const detail = await client.get<AnyRecord>(`/payers/${encodeURIComponent(payerId)}`);
+  const sources = Array.isArray(detail.sources) ? detail.sources : [];
+  if (sources.length === 0) {
+    const link = await client.post<AnyRecord>("/payment-links", {
+      payerId,
+      amount: firstChargeCents,
+      description: setupDescription,
+      allowedPaymentMethods: ["credit-card", "bank-account"],
+      returnUrl: process.env.PINCH_RETURN_URL ?? "https://getpinch.com.au",
+    });
+    return { subscriptionId: null, status: null, setupUrl: link.url, pendingSetup: true };
+  }
+  const sub = await client.post<AnyRecord>("/subscriptions", { planId, payerId, startDate: subStart });
+  return { subscriptionId: sub.id, status: sub.status ?? null, setupUrl: null, pendingSetup: false };
+}
+
+/**
+ * The confirm:true provisioning loop of pinch_design_billing, extracted so
+ * pinch_onboard_business reuses it unchanged: provisions ONLY the
+ * provisionable-now subset; per-component failures are recorded, never thrown.
+ */
+async function provisionBlueprintComponents(
+  client: PinchClient,
+  components: DesignComponentInput[],
+  compiled: CompiledComponent[],
+  anchor: string,
+  metadata: string | undefined,
+): Promise<AnyRecord[]> {
+  const provisioned: AnyRecord[] = [];
+  for (let i = 0; i < components.length; i++) {
+    const c = components[i];
+    const comp = compiled[i].component;
+    if (comp.provisioning !== "provisionable-now") {
+      provisioned.push({ name: c.name, action: "skipped", reason: `${comp.provisioning} — see exampleCall/flags` });
+      continue;
+    }
+    try {
+      if (c.kind === "split") {
+        // Same mechanics as pinch_create_split (shared helpers).
+        const parts = c.parties!;
+        const usePct = parts.every((p) => p.sharePercent !== undefined);
+        const alloc = usePct
+          ? allocateByPercent(c.amountCents, parts.map((p) => p.sharePercent!))
+          : parts.map((p) => p.amountCents!);
+        const splitId = newSplitId();
+        const links: AnyRecord[] = [];
+        for (let j = 0; j < parts.length; j++) {
+          const { payer } = await ensurePayer(client, parts[j].email, parts[j].name);
+          const meta: SplitMeta = {
+            split: splitId, part: `${j + 1}/${parts.length}`, totalCents: c.amountCents,
+            amountCents: alloc[j], description: c.name, email: parts[j].email,
+            createdAt: todayPlus(0), dueDate: null,
+          };
+          const link = await client.post<AnyRecord>("/payment-links", {
+            payerId: payer.id, amount: alloc[j], description: `${c.name} — split share`,
+            allowedPaymentMethods: ["credit-card", "bank-account"],
+            returnUrl: process.env.PINCH_RETURN_URL ?? "https://getpinch.com.au",
+            metadata: JSON.stringify(meta),
+          });
+          links.push({ email: parts[j].email, amountAud: formatAud(alloc[j]), linkUrl: link.url });
+        }
+        provisioned.push({ name: c.name, action: "created", splitId, links });
+      } else if (c.kind === "one_off" || (c.kind === "package" && c.termPayments === undefined)) {
+        const { payer } = await ensurePayer(client, c.payerEmail!);
+        const link = await client.post<AnyRecord>("/payment-links", {
+          payerId: payer.id, amount: c.amountCents, description: c.name,
+          allowedPaymentMethods: ["credit-card", "bank-account"],
+          returnUrl: process.env.PINCH_RETURN_URL ?? "https://getpinch.com.au",
+          ...(metadata !== undefined ? { metadata } : {}),
+        });
+        provisioned.push({ name: c.name, action: "created", linkId: link.id, linkUrl: link.url });
+      } else {
+        // membership / term / package-with-instalments → plan + subscription,
+        // same source-requirement flow as pinch_create_subscription.
+        const { spec, subStart, firstChargeCents } = buildComponentPlanSpec(c, anchor, metadata);
+        const { payer } = await ensurePayer(client, c.payerEmail!);
+        const plan = await ensurePlan(client, spec);
+        const r = await subscribeOrSetup(
+          client, payer.id, plan.id, subStart, firstChargeCents,
+          `${c.name} — first payment & payment method setup`,
+        );
+        if (r.pendingSetup) {
+          provisioned.push({
+            name: c.name, action: "pendingSetup", planId: plan.id, setupLinkUrl: r.setupUrl,
+            reason: "payer has no stored payment source (Pinch requirement) — subscription will be created after setup link is paid; re-run to complete",
+          });
+        } else {
+          provisioned.push({ name: c.name, action: "created", subscriptionId: r.subscriptionId, planId: plan.id, status: r.status });
+        }
+      }
+    } catch (err) {
+      provisioned.push({
+        name: c.name, action: "skipped",
+        reason: err instanceof PinchApiError ? err.message : String(err),
+      });
+    }
+  }
+  return provisioned;
+}
+
+/** True when a component is recurring (enrolable via plan + subscription). */
+function isRecurringComponent(c: DesignComponentInput): boolean {
+  return (
+    (c.kind === "membership" || c.kind === "term" || (c.kind === "package" && c.termPayments !== undefined)) &&
+    c.interval !== undefined
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Tool registration
 // ---------------------------------------------------------------------------
 
@@ -1839,6 +2051,44 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
       "Must be exactly true to execute. Anything else returns a preview of what WOULD happen, for human approval.",
     );
 
+  /** Billing-components schema shared by pinch_design_billing and pinch_onboard_business. */
+  const billingComponentsParam = z
+    .array(
+      z.object({
+        kind: z.enum(["membership", "term", "package", "per_session", "one_off", "split"]),
+        name: z.string().min(1).max(120).describe("Component name, e.g. 'Adult membership'"),
+        amountCents: z.number().int().positive().describe("Charge amount in integer cents (per interval / per session / total for one_off & split)"),
+        interval: z.enum(["weekly", "fortnightly", "monthly"]).optional().describe("Billing cadence (membership/term; package instalments)"),
+        termPayments: z.number().int().min(2).max(104).optional().describe("Number of collections for term/package instalments"),
+        depositCents: z.number().int().min(100).optional().describe("Upfront deposit in cents (term/package)"),
+        parties: z
+          .array(
+            z.object({
+              email: z.string().email(),
+              name: z.string().optional(),
+              amountCents: z.number().int().positive().optional(),
+              sharePercent: z.number().positive().max(100).optional(),
+            }),
+          )
+          .max(10)
+          .optional()
+          .describe("Split parties (≥2 to provision; omit for event-driven splits)"),
+        payerEmail: z.string().email().optional().describe("Known customer email — makes the component provisionable now"),
+        notes: z.string().max(300).optional(),
+      }),
+    )
+    .min(1)
+    .max(8)
+    .describe("1–8 billing components extracted from the merchant's model");
+
+  /** Bulk-import payer schema shared by pinch_import_payers and pinch_onboard_business. */
+  const importPayerParam = z.object({
+    firstName: z.string().min(1).max(80).describe("Payer's first name"),
+    lastName: z.string().min(1).max(80).describe("Payer's last name"),
+    email: z.string().email().describe("Payer's email (maps to Pinch emailAddress) — the find-or-create identity"),
+    mobile: z.string().min(6).max(20).optional().describe("Optional mobile number (maps to Pinch mobileNumber)"),
+  });
+
   reg(
     track("pinch_create_payment_link"),
     {
@@ -2717,34 +2967,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
       description: DESIGN_BILLING_DESC,
       inputSchema: {
         businessName: z.string().max(120).optional().describe("Merchant/business name for the blueprint header"),
-        components: z
-          .array(
-            z.object({
-              kind: z.enum(["membership", "term", "package", "per_session", "one_off", "split"]),
-              name: z.string().min(1).max(120).describe("Component name, e.g. 'Adult membership'"),
-              amountCents: z.number().int().positive().describe("Charge amount in integer cents (per interval / per session / total for one_off & split)"),
-              interval: z.enum(["weekly", "fortnightly", "monthly"]).optional().describe("Billing cadence (membership/term; package instalments)"),
-              termPayments: z.number().int().min(2).max(104).optional().describe("Number of collections for term/package instalments"),
-              depositCents: z.number().int().min(100).optional().describe("Upfront deposit in cents (term/package)"),
-              parties: z
-                .array(
-                  z.object({
-                    email: z.string().email(),
-                    name: z.string().optional(),
-                    amountCents: z.number().int().positive().optional(),
-                    sharePercent: z.number().positive().max(100).optional(),
-                  }),
-                )
-                .max(10)
-                .optional()
-                .describe("Split parties (≥2 to provision; omit for event-driven splits)"),
-              payerEmail: z.string().email().optional().describe("Known customer email — makes the component provisionable now"),
-              notes: z.string().max(300).optional(),
-            }),
-          )
-          .min(1)
-          .max(8)
-          .describe("1–8 billing components extracted from the merchant's model"),
+        components: billingComponentsParam,
         platformFeePercent: z.number().min(0).max(30).optional().describe("Platform's retained fee % — flagged for review, never auto-provisioned"),
         retryPolicy: z.object({ softRetryDays: z.number().int().min(1).max(30).optional() }).optional(),
         pausePolicy: z.object({ pausesPerYear: z.number().int().min(0).max(12).optional() }).optional(),
@@ -2908,108 +3131,277 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
       }
 
       // ---- confirm:true — provision ONLY the provisionable-now subset -----
-      const client = getClient();
-      const provisioned: AnyRecord[] = [];
-      for (let i = 0; i < components.length; i++) {
-        const c = components[i] as DesignComponentInput;
-        const comp = compiled[i].component;
-        if (comp.provisioning !== "provisionable-now") {
-          provisioned.push({ name: c.name, action: "skipped", reason: `${comp.provisioning} — see exampleCall/flags` });
-          continue;
-        }
-        try {
-          if (c.kind === "split") {
-            // Same mechanics as pinch_create_split (shared helpers).
-            const parts = c.parties!;
-            const usePct = parts.every((p) => p.sharePercent !== undefined);
-            const alloc = usePct
-              ? allocateByPercent(c.amountCents, parts.map((p) => p.sharePercent!))
-              : parts.map((p) => p.amountCents!);
-            const splitId = newSplitId();
-            const links: AnyRecord[] = [];
-            for (let j = 0; j < parts.length; j++) {
-              const { payer } = await ensurePayer(client, parts[j].email, parts[j].name);
-              const meta: SplitMeta = {
-                split: splitId, part: `${j + 1}/${parts.length}`, totalCents: c.amountCents,
-                amountCents: alloc[j], description: c.name, email: parts[j].email,
-                createdAt: todayPlus(0), dueDate: null,
-              };
-              const link = await client.post<AnyRecord>("/payment-links", {
-                payerId: payer.id, amount: alloc[j], description: `${c.name} — split share`,
-                allowedPaymentMethods: ["credit-card", "bank-account"],
-                returnUrl: process.env.PINCH_RETURN_URL ?? "https://getpinch.com.au",
-                metadata: JSON.stringify(meta),
-              });
-              links.push({ email: parts[j].email, amountAud: formatAud(alloc[j]), linkUrl: link.url });
-            }
-            provisioned.push({ name: c.name, action: "created", splitId, links });
-          } else if (c.kind === "one_off" || (c.kind === "package" && c.termPayments === undefined)) {
-            const { payer } = await ensurePayer(client, c.payerEmail!);
-            const link = await client.post<AnyRecord>("/payment-links", {
-              payerId: payer.id, amount: c.amountCents, description: c.name,
-              allowedPaymentMethods: ["credit-card", "bank-account"],
-              returnUrl: process.env.PINCH_RETURN_URL ?? "https://getpinch.com.au",
-              ...(metadata !== undefined ? { metadata } : {}),
-            });
-            provisioned.push({ name: c.name, action: "created", linkId: link.id, linkUrl: link.url });
-          } else {
-            // membership / term / package-with-instalments → plan + subscription,
-            // same source-requirement flow as pinch_create_subscription.
-            const isTermLike = c.termPayments !== undefined;
-            const dep = c.depositCents;
-            const firstRecurring = dep !== undefined ? addIntervals(anchor, c.interval!, 1) : anchor;
-            const subStart = dep !== undefined ? anchor : firstRecurring;
-            const freq = INTERVAL_MAP[c.interval!];
-            const spec: PlanSpec = {
-              name: `${c.name} (${c.interval} ${formatAud(c.amountCents)}${isTermLike ? `, ${c.termPayments} payments` : ""}${dep !== undefined ? `, ${formatAud(dep)} deposit` : ""})`.slice(0, 200),
-              ...(metadata !== undefined ? { metadata } : {}),
-              recurringPayment: {
-                amountInCents: c.amountCents, description: c.name,
-                ...(dep !== undefined ? { startDateOffset: daysFromTo(subStart, firstRecurring), startDateInterval: "days" as const } : {}),
-                frequencyOffset: freq.frequencyOffset, frequencyInterval: freq.frequencyInterval,
-                endType: isTermLike ? "number-of-payments" : "never",
-                ...(isTermLike ? { endAfterNumberOfPayments: c.termPayments } : {}),
-                cancelPlanOnFailure: false,
-              },
-              ...(dep !== undefined
-                ? { fixedPayments: [{ amountInCents: dep, description: `${c.name} — deposit`, scheduledDateOffset: 0, scheduledDateInterval: "days" as const, cancelPlanOnFailure: false }] }
-                : {}),
-            };
-            const { payer } = await ensurePayer(client, c.payerEmail!);
-            const { items: plans } = await client.getAllPages<AnyRecord>("/plans");
-            const plan = plans.find((p) => planMatchesSpec(p, spec)) ?? (await client.post<AnyRecord>("/plans", spec));
-            const detail = await client.get<AnyRecord>(`/payers/${encodeURIComponent(payer.id)}`);
-            const sources = Array.isArray(detail.sources) ? detail.sources : [];
-            if (sources.length === 0) {
-              const firstCharge = dep ?? c.amountCents;
-              const link = await client.post<AnyRecord>("/payment-links", {
-                payerId: payer.id, amount: firstCharge,
-                description: `${c.name} — first payment & payment method setup`,
-                allowedPaymentMethods: ["credit-card", "bank-account"],
-                returnUrl: process.env.PINCH_RETURN_URL ?? "https://getpinch.com.au",
-              });
-              provisioned.push({
-                name: c.name, action: "pendingSetup", planId: plan.id, setupLinkUrl: link.url,
-                reason: "payer has no stored payment source (Pinch requirement) — subscription will be created after setup link is paid; re-run to complete",
-              });
-            } else {
-              const sub = await client.post<AnyRecord>("/subscriptions", { planId: plan.id, payerId: payer.id, startDate: subStart });
-              provisioned.push({ name: c.name, action: "created", subscriptionId: sub.id, planId: plan.id, status: sub.status });
-            }
-          }
-        } catch (err) {
-          provisioned.push({
-            name: c.name, action: "skipped",
-            reason: err instanceof PinchApiError ? err.message : String(err),
-          });
-        }
-      }
+      const provisioned = await provisionBlueprintComponents(
+        getClient(),
+        components as DesignComponentInput[],
+        compiled,
+        anchor,
+        metadata,
+      );
 
       return jsonResult({
         blueprint,
         blueprintText: txt.join("\n"),
         provisioned,
         note: "Provisioned the provisionable-now subset only; event-driven components stay manual (see exampleCall).",
+      });
+    }),
+  );
+
+  // Kept ≤280 chars — same downstream aiToolSchema 300-char hard cap as
+  // DESIGN_BILLING_DESC above (one oversized description strips ALL tools).
+  const IMPORT_PAYERS_DESC =
+    "Bulk-import 1-50 payers (customers) into Pinch from {firstName, lastName, email, mobile?} records. " +
+    "Payers are matched by email and reused, never duplicated; one failure never aborts the batch. " +
+    "Returns ids/emails/failure reasons only. No writes without confirm:true.";
+  if (IMPORT_PAYERS_DESC.length > 280) {
+    throw new Error(`pinch_import_payers description is ${IMPORT_PAYERS_DESC.length} chars (max 280).`);
+  }
+
+  reg(
+    track("pinch_import_payers"),
+    {
+      title: "Import payers in bulk (guarded)",
+      description: IMPORT_PAYERS_DESC,
+      inputSchema: {
+        payers: z.array(importPayerParam).min(1).max(50).describe("1–50 payers to import"),
+        confirm: confirmParam,
+      },
+    },
+    safe(async ({ payers, confirm }) => {
+      if (confirm !== true) {
+        return previewResult(
+          `Import ${payers.length} payer record(s) into Pinch: each is matched by email (existing payers are ` +
+            `reused, never duplicated) or created with firstName/lastName/emailAddress` +
+            `${payers.some((p) => p.mobile) ? "/mobileNumber" : ""}. Nothing has been created yet — ` +
+            `confirm:true creates them.`,
+          {
+            count: payers.length,
+            sample: payers.slice(0, 3).map((p) => ({ name: `${p.firstName} ${p.lastName}`, email: p.email })),
+          },
+        );
+      }
+
+      const { ok, failed } = await importPayerBatch(getClient(), payers);
+      return jsonResult({
+        importedCount: ok.length,
+        failedCount: failed.length,
+        ok,
+        failed,
+        note:
+          failed.length > 0
+            ? "Partial import — fix the reported errors and re-run with just the failed payers " +
+              "(existing emails are matched and reused, so re-runs are safe)."
+            : "All payers imported. Enrol them into billing with pinch_create_subscription or pinch_onboard_business.",
+      });
+    }),
+  );
+
+  const ONBOARD_BUSINESS_DESC =
+    "1-touch business setup: provisions a billing blueprint (same components as pinch_design_billing), " +
+    "bulk-imports payers, and optionally enrols each into one recurring component via hosted setup links " +
+    "(pendingSetup). Returns a go-live pack. No writes without confirm:true.";
+  if (ONBOARD_BUSINESS_DESC.length > 280) {
+    throw new Error(`pinch_onboard_business description is ${ONBOARD_BUSINESS_DESC.length} chars (max 280).`);
+  }
+
+  reg(
+    track("pinch_onboard_business"),
+    {
+      title: "1-touch business setup (guarded)",
+      description: ONBOARD_BUSINESS_DESC,
+      inputSchema: {
+        businessName: z.string().min(1).max(120).describe("Merchant/business name for the go-live pack"),
+        components: billingComponentsParam,
+        payers: z
+          .array(importPayerParam)
+          .min(1)
+          .max(50)
+          .optional()
+          .describe("Up to 50 payers (customers) to import as part of onboarding"),
+        assignPlan: z
+          .string()
+          .optional()
+          .describe(
+            "Name of ONE recurring component (membership | term | package-with-instalments) to enrol every " +
+              "imported payer into — each enrolment produces a hosted setup link (pendingSetup flow)",
+          ),
+        startDate: isoDate.optional().describe("Anchor date for provisioning and enrolments (YYYY-MM-DD). Default: tomorrow."),
+        metadata: z.string().optional().describe("Attribution metadata (JSON preferred) applied to provisioned plans"),
+        confirm: confirmParam,
+      },
+    },
+    safe(async ({ businessName, components, payers, assignPlan, startDate, metadata, confirm }) => {
+      // ---- Deterministic validation (pure — no API calls) -----------------
+      const errors = components
+        .map((c) => validateDesignComponent(c as DesignComponentInput))
+        .filter((e): e is string => e !== null);
+      if (errors.length > 0) return errorResult("Blueprint validation failed.", { errors });
+
+      // assignPlan must name a recurring component (that's what payers can be
+      // enrolled into via plan + subscription).
+      let enrolComponent: DesignComponentInput | undefined;
+      if (assignPlan !== undefined) {
+        const recurring = (components as DesignComponentInput[]).filter(isRecurringComponent);
+        enrolComponent = recurring.find((c) => c.name.toLowerCase() === assignPlan.toLowerCase());
+        if (!enrolComponent) {
+          return errorResult(
+            `assignPlan "${assignPlan}" does not match a recurring component — enrolment needs a membership, ` +
+              "term, or package-with-instalments component.",
+            { enrollableComponents: recurring.map((c) => c.name) },
+          );
+        }
+      }
+
+      const anchor = startDate ?? todayPlus(1);
+      const horizon = new Date(Date.parse(`${anchor}T00:00:00Z`) + 30 * 86_400_000)
+        .toISOString()
+        .slice(0, 10);
+      const compiled = components.map((c) => compileBillingComponent(c as DesignComponentInput, anchor, horizon));
+      const payerList = payers ?? [];
+
+      if (confirm !== true) {
+        // Structured go-live plan — pure preview, zero API calls.
+        return jsonResult({
+          preview: true,
+          wouldDo:
+            `Onboard “${businessName}”: provision ${components.length} billing component(s), import ` +
+            `${payerList.length} payer(s)` +
+            (enrolComponent
+              ? `, and enrol each imported payer into “${enrolComponent.name}” via a pendingSetup subscription ` +
+                `(one hosted setup link per payer)`
+              : "") +
+            ".",
+          goLivePlan: {
+            businessName,
+            startDate: anchor,
+            provision: compiled.map((cc) => ({
+              name: cc.component.name,
+              kind: cc.component.kind,
+              mapsTo: cc.component.mapsTo,
+              schedule: cc.component.schedule.summary,
+              provisioning: cc.component.provisioning,
+            })),
+            payers: {
+              toCreate: payerList.length,
+              sample: payerList.slice(0, 3).map((p) => ({ name: `${p.firstName} ${p.lastName}`, email: p.email })),
+            },
+            enrolment: enrolComponent
+              ? {
+                  plan: enrolComponent.name,
+                  payersToEnrol: payerList.length,
+                  perPayer:
+                    "one pendingSetup subscription + hosted setup link — paying the link collects the first " +
+                    "charge AND stores the payment method",
+                }
+              : null,
+          },
+          note: "Re-call with confirm:true after human approval",
+        });
+      }
+
+      // ---- confirm:true — go live -----------------------------------------
+      // Partial-failure honesty: every step records its own failures and the
+      // pack always returns whatever DID succeed.
+      const client = getClient();
+
+      // (1) Provision the blueprint (same loop as pinch_design_billing).
+      const provisionedComponents = await provisionBlueprintComponents(
+        client,
+        components as DesignComponentInput[],
+        compiled,
+        anchor,
+        metadata,
+      );
+
+      // (2) Import payers (same batch helper as pinch_import_payers).
+      const { ok: createdPayers, failed: failedPayers } = await importPayerBatch(client, payerList);
+
+      // (3) Enrol every successfully-imported payer into the assignPlan
+      //     component: one shared plan, then the pendingSetup flow per payer.
+      const enrolments: AnyRecord[] = [];
+      let enrolmentError: string | null = null;
+      if (enrolComponent && createdPayers.length > 0) {
+        try {
+          const { spec, subStart, firstChargeCents } = buildComponentPlanSpec(enrolComponent, anchor, metadata);
+          const plan = await ensurePlan(client, spec);
+          const label =
+            enrolComponent.depositCents !== undefined ? "deposit" : `first ${enrolComponent.interval} payment`;
+          for (const p of createdPayers) {
+            try {
+              const r = await subscribeOrSetup(
+                client, p.payerId, plan.id, subStart, firstChargeCents,
+                `${enrolComponent.name} — ${label} & payment method setup`,
+              );
+              enrolments.push({
+                payerEmail: p.email,
+                payerId: p.payerId,
+                subscriptionId: r.subscriptionId,
+                setupUrl: r.setupUrl,
+                status: r.pendingSetup ? "pendingSetup" : (r.status ?? "created"),
+                planId: plan.id,
+              });
+            } catch (err) {
+              enrolments.push({
+                payerEmail: p.email,
+                payerId: p.payerId,
+                error: err instanceof PinchApiError ? err.message : String(err),
+              });
+            }
+          }
+        } catch (err) {
+          // Plan setup failed — payers/provisioning above are still returned.
+          enrolmentError = err instanceof PinchApiError ? err.message : String(err);
+        }
+      }
+
+      // (4) Go-live checklist.
+      const setupLinks = enrolments.filter((e) => e.setupUrl);
+      const nextSteps: string[] = [];
+      if (setupLinks.length > 0) {
+        nextSteps.push(
+          `Send each of the ${setupLinks.length} payer(s) their hosted setup link — paying it collects the ` +
+            "first charge AND stores their payment method.",
+        );
+        nextSteps.push(
+          "After a payer's setup link is paid, re-call pinch_create_subscription with confirm:true for them — " +
+            "the plan is already in place and will be reused; shift startDate so the collected first charge " +
+            "isn't double-billed.",
+        );
+      }
+      nextSteps.push(
+        "Direct-debit collections run on Pinch's overnight processing cycle — first collections land the " +
+          "business day after their scheduled date.",
+      );
+      if (provisionedComponents.some((p) => p.action === "skipped")) {
+        nextSteps.push(
+          "Event-driven components were not auto-provisioned — issue payment links per booking/sale " +
+            "(see each component's exampleCall in pinch_design_billing).",
+        );
+      }
+      if (failedPayers.length > 0) {
+        nextSteps.push(
+          `${failedPayers.length} payer import(s) failed — fix the reported errors and re-run ` +
+            "pinch_import_payers for just those payers (re-runs are safe: existing emails are reused).",
+        );
+      }
+      nextSteps.push(
+        "Once collections start, monitor pinch_cashflow_summary weekly and triage dishonours with " +
+          "pinch_list_failed_payments.",
+      );
+
+      return jsonResult({
+        businessName,
+        startDate: anchor,
+        provisioned: {
+          components: provisionedComponents,
+          note: "Provisioned the provisionable-now subset only; event-driven components stay manual.",
+        },
+        payers: { created: createdPayers, failed: failedPayers },
+        enrolments,
+        ...(enrolmentError !== null ? { enrolmentError } : {}),
+        nextSteps,
+        generatedAt: new Date().toISOString(),
       });
     }),
   );

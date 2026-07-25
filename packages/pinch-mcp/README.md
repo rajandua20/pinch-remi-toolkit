@@ -96,8 +96,9 @@ pointed at.
 
 > This is an **unofficial community MCP server** for the Pinch Payments API —
 > merchants authorise it with their **own** API keys; no credentials are shared
-> or proxied by anyone else. Security posture, hardening details, and known
-> limitations: see [SECURITY.md](./SECURITY.md). HTTP mode ships with per-IP
+> or proxied by anyone else. Security architecture, standards mapping (OWASP
+> GenAI / Palo Alto / SlowMist), and the production roadmap: see
+> [SECURITY.md](./SECURITY.md). HTTP mode ships with per-IP
 > rate limiting (`PINCH_MCP_RATE_LIMIT`, default 60 req/min), a 256 KB body
 > cap, slowloris-resistant socket timeouts, per-call audit logging (tool,
 > outcome, duration, hashed tenant tag — never params or secrets), tool-result
@@ -125,7 +126,7 @@ Three deployment patterns:
    the server refuses `x-pinch-env: live` outright, which is the safe default:
    a shared endpoint should only ever touch test data.
 3. **Library import** — `buildServer(configOverride?)` is exported from
-   `dist/index.js`; embed the fully-wired `McpServer` (all 20 tools) in your
+   `dist/index.js`; embed the fully-wired `McpServer` (all 22 tools) in your
    own Node process and connect whatever transport you like.
 
 ## Tool catalog
@@ -152,6 +153,8 @@ Three deployment patterns:
 | `pinch_cancel_subscription` | **write** | Cancels a subscription (in-flight payments complete, future scheduled payments deleted; payer sources untouched). Permanent — resuming needs a new subscription |
 | `pinch_create_split` | **write** | Splits a shared B2B bill across 2–10 parties: one tagged payment link each, by explicit amounts or percentages (largest-remainder allocation — cents always sum exactly) |
 | `pinch_design_billing` | **write** | Deterministic billing-blueprint compiler: maps 1–8 structured components to Pinch primitives with schedules, indicative fees, a timeline and review flags; `confirm:true` provisions only the provisionable-now subset |
+| `pinch_import_payers` | **write** | Bulk-imports 1–50 payers from `{firstName, lastName, email, mobile?}` records; find-or-create by email (no duplicates, safe to re-run); one failure never aborts the batch |
+| `pinch_onboard_business` | **write** | **1-touch setup**: provisions a billing blueprint (same components as `design_billing`), imports the payer list, and enrols each payer into a chosen recurring component via hosted setup links — returns a go-live pack with per-payer links and next steps |
 
 ### The confirm-guard convention
 
@@ -287,7 +290,7 @@ Everything below is **test-env only** and how the smoke test works:
   works, but the sandbox validates account numbers as **3–9 digits** (e.g.
   `000-000` / `123456` — a 10-digit account number is rejected with a 400,
   despite docs suggesting anything goes).
-- **`Time-Travel` header — honest caveat.** The sandbox accepts the header (and
+- **`Time-Travel` header — observed behaviour.** The sandbox accepts the header (and
   event dates stamp at the simulated time), but in our live sandbox testing,
   polling reads with `Time-Travel` set did **not** flip a scheduled direct-debit
   payment to processed/dishonoured — the "overnight run" doesn't appear to be
