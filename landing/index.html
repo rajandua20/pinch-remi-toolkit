@@ -5,104 +5,150 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Remi — the AI payments teammate for Pinch merchants</title>
 <meta name="theme-color" content="#1A1A2E"/>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9Ikx5Ym9BSSI+DQogIDwhLS0gU3RhdGljIChub24tYW5pbWF0ZWQpIEx5Ym9BSSBhcHAgbWFyaywgZm9yIHByaW50L1BERi9PRyB1c2UuIC0tPg0KICA8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgcng9IjIwIiBmaWxsPSIjMWUxYjRiIi8+DQogIDxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDUwLDUwKSBzY2FsZSgxLjMpIj4NCiAgICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMzAsLTMwKSI+DQogICAgICA8cGF0aCBkPSJNIDUsMjUgViA1NSBIIDM1IiBzdHJva2U9IiM2MzY2ZjEiIHN0cm9rZS13aWR0aD0iNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBmaWxsPSJub25lIi8+DQogICAgICA8cmVjdCB4PSIyIiB5PSIxNSIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiIGZpbGw9IiM4MThjZjgiLz4NCiAgICAgIDxyZWN0IHg9IjIiIHk9IjYiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIHJ4PSIxIiBmaWxsPSIjYTViNGZjIiBvcGFjaXR5PSIwLjYiLz4NCiAgICAgIDxyZWN0IHg9IjM4IiB5PSI1MiIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiIGZpbGw9IiM4MThjZjgiLz4NCiAgICAgIDxyZWN0IHg9IjQ3IiB5PSI1MiIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiIGZpbGw9IiNhNWI0ZmMiIG9wYWNpdHk9IjAuNiIvPg0KICAgICAgPHBhdGggZD0iTSA1NSwzNSBWIDUgSCAyNSIgc3Ryb2tlPSIjZjk3MzE2IiBzdHJva2Utd2lkdGg9IjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgZmlsbD0ibm9uZSIvPg0KICAgICAgPHJlY3QgeD0iNTIiIHk9IjM5IiB3aWR0aD0iNiIgaGVpZ2h0PSI2IiByeD0iMSIgZmlsbD0iI2ZiOTIzYyIvPg0KICAgICAgPHJlY3QgeD0iNTIiIHk9IjQ4IiB3aWR0aD0iNiIgaGVpZ2h0PSI2IiByeD0iMSIgZmlsbD0iI2ZkYmE3NCIgb3BhY2l0eT0iMC42Ii8+DQogICAgICA8cmVjdCB4PSIxNiIgeT0iMiIgd2lkdGg9IjYiIGhlaWdodD0iNiIgcng9IjEiIGZpbGw9IiNmYjkyM2MiLz4NCiAgICAgIDxyZWN0IHg9IjciIHk9IjIiIHdpZHRoPSI2IiBoZWlnaHQ9IjYiIHJ4PSIxIiBmaWxsPSIjZmRiYTc0IiBvcGFjaXR5PSIwLjYiLz4NCiAgICAgIDxjaXJjbGUgY3g9IjIwIiBjeT0iNDAiIHI9IjMiIGZpbGw9IiM2MzY2ZjEiLz4NCiAgICAgIDxjaXJjbGUgY3g9IjMwIiBjeT0iMzAiIHI9IjMiIGZpbGw9IiNkYjI3NzciLz4NCiAgICAgIDxjaXJjbGUgY3g9IjQwIiBjeT0iMjAiIHI9IjMiIGZpbGw9IiNmOTczMTYiLz4NCiAgICA8L2c+DQogIDwvZz4NCjwvc3ZnPg0K"/>
 <meta name="description" content="Describe how you charge in plain English. A deterministic compiler builds it on Pinch, runs it, and fixes it when payments fail."/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
 <style>
 :root{
   --ink:#1A1A2E; --mut:#6B7280; --faint:#9CA3AF; --line:#E5E7EB; --bg:#F7F8FC; --card:#ffffff;
-  --brand:#F26522; --brand2:#F97316; --indigo:#4F46E5; --purple:#7C5CFC; --deep:#1A1A2E; --deep2:#232345;
-  --ok:#2ECC71; --ok-ink:#1E9E5A; --warn:#b45309; --bad:#dc2626;
+  --brand:#F26522; --brand2:#F97316; --indigo:#4F46E5; --purple:#7C5CFC; --ok:#2ECC71; --ok-ink:#1E9E5A; --warn:#b45309; --bad:#dc2626;
   --shadow-card:0 1px 2px rgb(26 26 46/.04),0 1px 6px -1px rgb(26 26 46/.06);
-  --term-bg:#14142B; --term-line:#26264A; --term-ink:#C9CEDE; --term-green:#2ECC71;
+  --shadow-lift:0 12px 32px -8px rgb(26 26 46/.14);
+  --term-bg:#1A1A2E; --term-deep:#14142B; --term-line:#2E2E52; --term-ink:#C9CEDE; --term-green:#2ECC71;
   --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
   --sans:"Geist",Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1150px;margin:0 auto;padding:0 24px}
 a{color:var(--brand)}
 code,pre,.mono{font-family:var(--mono)}
-h2{font-size:28px;margin:0 0 6px;letter-spacing:-.02em;color:var(--ink)}
-.kicker{font-size:12.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);margin:0 0 8px}
-.lead{color:var(--mut);font-size:16px;max-width:760px;margin:0 0 26px}
-section{padding:64px 0}
-section+section{border-top:1px solid var(--line)}
+h2{font-size:30px;margin:0 0 8px;letter-spacing:-.025em;color:var(--ink);font-weight:800}
+.kicker{font-size:12.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);margin:0 0 10px}
+.lead{color:var(--mut);font-size:18px;max-width:780px;margin:0 0 32px}
+section{padding:88px 0}
+section.alt{background:var(--bg)}
+.icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;flex:none}
+.icon svg{width:22px;height:22px}
+.tint-orange{background:#FFF1E9;color:var(--brand)}
+.tint-indigo{background:#EEF2FF;color:var(--indigo)}
+.tint-green{background:#ECFDF5;color:var(--ok-ink)}
+.tint-purple{background:#F3EFFF;color:var(--purple)}
+
+/* ---------- top nav ---------- */
+.topnav{position:sticky;top:0;z-index:60;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;height:68px;gap:24px}
+.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+.logo-word{font-weight:700;font-size:20px;letter-spacing:-.02em;color:#1e293b}
+.logo-word .ai{color:#4f46e5}
+.nav-links{display:flex;gap:28px;font-size:14.5px;font-weight:500}
+.nav-links a{color:var(--ink);text-decoration:none;position:relative;padding:23px 0}
+.nav-links a:hover{color:var(--brand)}
+.nav-links a.active{color:var(--brand);font-weight:700}
+.nav-links a.active::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--brand);border-radius:2px 2px 0 0}
+.nav-cta{display:inline-flex;align-items:center;gap:7px;background:var(--brand);color:#fff;font-weight:700;font-size:14px;padding:10px 20px;border-radius:10px;text-decoration:none;box-shadow:0 4px 14px rgba(242,101,34,.32);transition:background .12s ease}
+.nav-cta:hover{background:var(--brand2)}
 
 /* ---------- hero ---------- */
-.hero{background:
-  radial-gradient(1100px 500px at 15% -10%, rgba(242,101,34,.16), transparent 60%),
-  radial-gradient(900px 480px at 90% 0%, rgba(124,92,252,.13), transparent 55%),
-  linear-gradient(150deg,#16162B 0%, #1A1A2E 45%, #232345 100%);
-  color:#fff;padding:0 0 84px;position:relative;overflow:hidden}
-.hero::after{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;mask-image:radial-gradient(720px 460px at 50% 0%,#000 30%,transparent 100%);-webkit-mask-image:radial-gradient(720px 460px at 50% 0%,#000 30%,transparent 100%)}
-.hero .wrap{position:relative;z-index:1}
-.nav{display:flex;align-items:center;justify-content:space-between;padding:22px 0}
-.logo{display:flex;align-items:center;gap:12px;font-weight:800;font-size:19px;letter-spacing:-.01em;color:#fff}
-.logo .ai{color:var(--brand);font-weight:800}
-.logo .divider{color:#3A3A5C;font-weight:400}
-.logo .product{color:#B8BDD3;font-weight:600;font-size:14.5px}
-.logo .product b{color:var(--brand2);font-weight:700}
-.nav-links{display:flex;gap:22px;font-size:14px}
-.nav-links a{color:#B8BDD3;text-decoration:none}
-.nav-links a:hover{color:#fff}
-.hero-inner{padding:56px 0 0;max-width:820px}
-.eyebrow{font-size:12.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--brand2);margin:0 0 14px}
-.hero h1{font-size:clamp(32px,5.4vw,54px);line-height:1.08;margin:0 0 18px;letter-spacing:-.03em}
-.hero h1 .grad{background:linear-gradient(90deg,#F26522,#FDBA74);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero .sub{font-size:19px;color:#B8BDD3;max-width:640px;margin:0 0 26px;line-height:1.55}
-.badges{display:flex;flex-wrap:wrap;gap:10px}
-.badge{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:700;color:#E7E9F2;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);padding:6px 13px;border-radius:999px;backdrop-filter:blur(4px)}
-.badge .dot{width:6px;height:6px;border-radius:50%;background:var(--ok)}
-.ctas{display:flex;flex-wrap:wrap;gap:14px;margin:30px 0 0}
-.btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding:13px 24px;border-radius:11px;text-decoration:none;transition:transform .12s ease,box-shadow .12s ease,background .12s ease;border:0;cursor:pointer;font-family:var(--sans)}
+.hero{background:#fff;padding:76px 0 0;position:relative}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.eyebrow{font-size:12.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--brand);margin:0 0 16px}
+.display{font-size:clamp(40px,5.4vw,66px);font-weight:800;line-height:1.04;letter-spacing:-.035em;color:var(--ink);margin:0 0 24px}
+.grad-flare{font-style:italic;background:linear-gradient(92deg,#7C5CFC 5%,#C445A0 55%,#EF4444 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-right:.06em}
+.grad-orange{background:linear-gradient(92deg,#F26522,#FB923C);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .sub{font-size:19px;color:var(--mut);max-width:520px;margin:0 0 30px;line-height:1.6}
+.ctas{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:15.5px;padding:14px 26px;border-radius:12px;text-decoration:none;transition:transform .12s ease,box-shadow .12s ease,background .12s ease;border:0;cursor:pointer;font-family:var(--sans)}
 .btn:active{transform:translateY(1px)}
-.btn-primary{background:var(--brand);color:#fff;box-shadow:0 8px 24px rgba(242,101,34,.42)}
-.btn-primary:hover{background:var(--brand2);box-shadow:0 10px 30px rgba(249,115,22,.5)}
-.btn-ghost{background:transparent;color:#E7E9F2;border:1px solid rgba(255,255,255,.28)}
-.btn-ghost:hover{background:rgba(255,255,255,.08)}
-.hero-strip{margin-top:52px;background:rgba(20,20,43,.62);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:14px 20px;font-family:var(--mono);font-size:13.5px;color:#A9AFC6;display:flex;flex-wrap:wrap;gap:8px 26px}
-.hero-strip b{color:#fff;font-weight:600}
+.btn-primary{background:var(--brand);color:#fff;box-shadow:0 8px 22px rgba(242,101,34,.35)}
+.btn-primary:hover{background:var(--brand2);box-shadow:0 10px 28px rgba(249,115,22,.42)}
+.btn-secondary{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:var(--shadow-card)}
+.btn-secondary:hover{border-color:#D1D5DB;box-shadow:var(--shadow-lift)}
+.btn-secondary svg{color:var(--brand)}
+.trust{display:flex;flex-wrap:wrap;gap:12px 26px;margin-top:28px;font-size:14.5px;color:var(--mut);font-weight:500}
+.trust span{display:inline-flex;align-items:center;gap:8px}
+.trust svg{width:19px;height:19px;color:var(--indigo);flex:none}
+
+/* hero mockup */
+.mock-wrap{position:relative;padding:14px 10px 0 0}
+.mock{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 30px 70px -14px rgba(26,26,46,.22);overflow:visible;position:relative}
+.mock-bar{display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--line);position:relative}
+.mock-dots{display:flex;gap:7px}
+.mock-dots i{width:11px;height:11px;border-radius:50%}
+.mock-dots i:nth-child(1){background:#FF5F57}
+.mock-dots i:nth-child(2){background:#FEBC2E}
+.mock-dots i:nth-child(3){background:#28C840}
+.mock-title{position:absolute;left:0;right:0;text-align:center;font-size:12px;color:var(--faint);pointer-events:none}
+.mock-body{padding:20px;display:flex;flex-direction:column;gap:12px}
+.mock-label{font-size:10.5px;font-weight:800;letter-spacing:.09em;color:var(--faint);margin-bottom:5px}
+.mock-user{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:11px 15px;font-size:13.5px;color:var(--ink);font-weight:500}
+.mock-alert{background:linear-gradient(135deg,#F26522,#FB923C);border-radius:14px;padding:15px 17px;color:#fff;font-size:13.5px;line-height:1.5;box-shadow:0 12px 26px -6px rgba(242,101,34,.45)}
+.mock-alert .mock-label{color:rgba(255,255,255,.85)}
+.mock-btns{display:flex;gap:9px;margin-top:11px}
+.mock-btn{font-size:12px;font-weight:700;padding:6px 15px;border-radius:8px;cursor:default;font-family:var(--sans)}
+.mock-btn.solid{background:#fff;color:#C2410C;border:0}
+.mock-btn.ghost{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.5)}
+.mock-done{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 15px;font-size:12.5px;color:var(--mut);box-shadow:var(--shadow-card)}
+.mock-done svg{width:18px;height:18px;color:var(--ok);flex:none}
+.mock-done b{color:var(--ink)}
+.mock-chip{position:absolute;top:-18px;right:-14px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 14px 34px -6px rgba(26,26,46,.2);padding:11px 15px;min-width:118px;z-index:2}
+.mock-chip .lbl{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.09em;color:var(--ok-ink)}
+.mock-chip .lbl svg{width:13px;height:13px}
+.mock-chip .amt{font-size:19px;font-weight:800;color:var(--ink);margin:3px 0 7px;letter-spacing:-.02em}
+.mock-chip .bar{height:4px;border-radius:2px;background:#ECFDF5;overflow:hidden}
+.mock-chip .bar i{display:block;height:100%;width:50%;background:var(--ok);border-radius:2px}
+
+.discover{display:flex;flex-direction:column;align-items:center;gap:2px;margin:56px auto 0;color:var(--faint);font-size:11px;font-weight:800;letter-spacing:.2em;text-decoration:none}
+.discover svg{width:18px;height:18px;color:var(--brand)}
+.wave{display:block;width:100%;height:58px;margin-top:18px}
+
+/* ---------- stat strip ---------- */
+.hero-strip{margin-top:44px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 22px;font-family:var(--mono);font-size:13px;color:var(--mut);display:flex;flex-wrap:wrap;gap:8px 28px;box-shadow:var(--shadow-card)}
+.hero-strip b{color:var(--ink);font-weight:700}
 
 /* ---------- cards ---------- */
-.grid{display:grid;gap:18px}
-.grid-4{grid-template-columns:repeat(auto-fit,minmax(235px,1fr))}
-.grid-3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.grid{display:grid;gap:20px}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(285px,1fr))}
 .grid-2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
-.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 22px 20px;box-shadow:var(--shadow-card);transition:box-shadow .15s ease,transform .15s ease;display:flex;flex-direction:column}
-.card:hover{box-shadow:0 10px 30px rgba(26,26,46,.10);transform:translateY(-2px)}
-.card .icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px;background:linear-gradient(135deg,#FFF4EE,#FFF9F5);border:1px solid #FBDCC8}
-.card h3{margin:0 0 8px;font-size:16.5px;letter-spacing:-.01em;color:var(--ink)}
-.card p{margin:0;font-size:14px;color:var(--mut)}
-.card .tags{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px}
-.tag{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;background:#FDEBE0;color:#D2500E}
-.tag.ok{background:#EAF9F0;color:var(--ok-ink)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px 24px 22px;box-shadow:var(--shadow-card);transition:box-shadow .15s ease,transform .15s ease;display:flex;flex-direction:column}
+.card:hover{box-shadow:var(--shadow-lift);transform:translateY(-2px)}
+.card h3{margin:0 0 8px;font-size:17px;letter-spacing:-.01em;color:var(--ink);font-weight:700}
+.card p{margin:0;font-size:14.5px;color:var(--mut)}
+.card .tags{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#FFF1E9;color:#D2500E}
+.tag.ok{background:#ECFDF5;color:var(--ok-ink)}
 .tag.warn{background:#fffbeb;color:var(--warn)}
 
 /* ---------- mermaid ---------- */
-.diagram{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:6px;text-align:center;overflow-x:auto;box-shadow:var(--shadow-card)}
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;margin-top:6px;text-align:center;overflow-x:auto;box-shadow:var(--shadow-card)}
 .diagram .mermaid{min-width:640px}
 
 /* ---------- terminal ---------- */
-.terminal{background:var(--term-bg);border-radius:16px;border:1px solid var(--term-line);overflow:hidden;box-shadow:0 18px 50px rgba(26,26,46,.35)}
-.term-bar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:#1E1E3A;border-bottom:1px solid var(--term-line)}
+.terminal{background:var(--term-bg);border-radius:16px;border:1px solid var(--term-line);overflow:hidden;box-shadow:0 24px 60px -16px rgba(26,26,46,.4)}
+.term-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--term-deep);border-bottom:1px solid var(--term-line)}
 .term-bar .d{width:11px;height:11px;border-radius:50%}
-.term-bar .d1{background:#f87171}.term-bar .d2{background:#fbbf24}.term-bar .d3{background:var(--ok)}
+.term-bar .d1{background:#FF5F57}.term-bar .d2{background:#FEBC2E}.term-bar .d3{background:#28C840}
 .term-bar .title{margin-left:8px;font-family:var(--mono);font-size:12px;color:#6B7280}
 .terminal pre{margin:0;padding:20px 22px;font-size:12.6px;line-height:1.62;color:var(--term-ink);overflow-x:auto;white-space:pre;max-height:560px;overflow-y:auto}
 .term-cmd{color:var(--brand2)}
-.caption{font-size:13.5px;color:var(--mut);margin-top:12px;text-align:center;font-style:italic}
+.caption{font-size:14px;color:var(--mut);margin-top:14px;text-align:center;font-style:italic}
 
 /* ---------- playground ---------- */
-.tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:2px solid var(--line);width:fit-content}
-.tab{border:0;background:transparent;padding:10px 20px;margin-bottom:-2px;border-bottom:2px solid transparent;font-size:14px;font-weight:700;color:var(--mut);cursor:pointer;font-family:var(--sans)}
+.tabs{display:flex;gap:4px;margin-bottom:22px;border-bottom:2px solid var(--line);width:fit-content}
+.tab{border:0;background:transparent;padding:10px 20px;margin-bottom:-2px;border-bottom:3px solid transparent;font-size:14.5px;font-weight:700;color:var(--mut);cursor:pointer;font-family:var(--sans)}
 .tab.active{color:var(--brand);border-bottom-color:var(--brand)}
 .pg-panel{display:none}
 .pg-panel.active{display:block}
 .chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
-.chip{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:9px 17px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:background .12s,border-color .12s;box-shadow:var(--shadow-card)}
-.chip:hover{background:#FFF4EE;border-color:#F8C6A4}
+.chip{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:9px 18px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:background .12s,border-color .12s;box-shadow:var(--shadow-card)}
+.chip:hover{background:#FFF1E9;border-color:#F8C6A4}
 .chip:disabled{opacity:.5;cursor:wait}
+.chip.active{background:#FFF1E9;border-color:var(--brand);color:#C2410C}
+.chip-reset{margin-left:auto;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--mut);border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:color .12s,border-color .12s}
+.chip-reset:hover{color:var(--ink);border-color:#D1D5DB}
+.chip-reset svg{width:14px;height:14px}
 .console{background:var(--term-bg);border:1px solid var(--term-line);border-radius:16px;min-height:280px;max-height:560px;overflow-y:auto;padding:18px 20px}
 .console .empty{color:#5A5F7A;font-family:var(--mono);font-size:13px;padding:20px 4px}
 .msg{margin:0 0 14px}
@@ -111,7 +157,7 @@ section+section{border-top:1px solid var(--line)}
 .msg-tool{font-family:var(--mono);font-size:12px;color:#A99BFF;margin:6px 0}
 .msg-summary{color:#A7EBC8;font-size:13.5px;margin:6px 0 8px}
 .msg-summary::before{content:"remi ▸ ";color:var(--ok);font-family:var(--mono);font-size:12.5px}
-.msg pre{background:#0E0E22;border:1px solid var(--term-line);border-radius:10px;padding:14px 16px;font-size:11.8px;line-height:1.55;color:var(--term-ink);overflow-x:auto;margin:0;max-height:340px;overflow-y:auto}
+.msg pre{background:var(--term-deep);border:1px solid var(--term-line);border-radius:10px;padding:14px 16px;font-size:11.8px;line-height:1.55;color:var(--term-ink);overflow-x:auto;margin:0;max-height:340px;overflow-y:auto}
 .msg-err{color:#fca5a5;font-size:13.5px;font-family:var(--mono)}
 .live-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:16px}
 .field label{display:block;font-size:12px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}
@@ -121,40 +167,41 @@ section+section{border-top:1px solid var(--line)}
 .field-wide{grid-column:1/-1}
 .live-form textarea{min-height:120px;resize:vertical}
 .run-row{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:16px}
-.btn-run{background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(242,101,34,.35)}
+.btn-run{background:var(--brand);color:#fff;box-shadow:0 6px 18px rgba(242,101,34,.32)}
 .btn-run:hover{background:var(--brand2)}
 .btn-run:disabled{opacity:.6;cursor:wait}
-.security-note{background:#EAF9F0;border:1px solid #BFEFD4;border-radius:12px;padding:12px 16px;font-size:13px;color:#14713F;margin-top:16px}
+.security-note{background:#ECFDF5;border:1px solid #BFEFD4;border-radius:12px;padding:13px 16px;font-size:13.5px;color:#14713F;margin-top:16px}
 .security-note b{color:#0E5B31}
 
 /* ---------- hosting ---------- */
 .cmd{position:relative;background:var(--term-bg);border-radius:10px;margin-top:auto;padding:12px 44px 12px 14px;font-family:var(--mono);font-size:12px;color:var(--term-green);overflow-x:auto;white-space:pre}
 .copy-btn{position:absolute;top:7px;right:7px;border:1px solid #3A3A5C;background:#232345;color:#9CA3AF;border-radius:7px;font-size:11px;padding:4px 9px;cursor:pointer;font-family:var(--mono)}
 .copy-btn:hover{color:#E7E9F2}
-.notice{background:#FFF4EE;border-left:4px solid var(--brand);border-radius:10px;padding:12px 16px;font-size:13.5px;color:#8A3A10;margin-top:20px}
+.notice{background:#FFF1E9;border-left:4px solid var(--brand);border-radius:10px;padding:13px 16px;font-size:14px;color:#8A3A10;margin-top:22px}
 
 /* ---------- lybo ---------- */
-.lybo{background:linear-gradient(150deg,#16162B,#1A1A2E 55%,#232345);color:#fff;border-top:0 !important}
-.lybo .kicker{color:var(--brand2)}
-.lybo h2{color:#fff}
-.lybo .lead{color:#B8BDD3}
-.lybo .card{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.13);box-shadow:none}
-.lybo .card h3{color:#fff}
-.lybo .card p{color:#B8BDD3}
-.lybo .card .icon{background:rgba(242,101,34,.12);border-color:rgba(242,101,34,.3)}
-.lybo .tag{background:rgba(242,101,34,.18);color:#FDBA74}
-.lybo .flow{font-family:var(--mono);font-size:13px;color:#A9AFC6;background:rgba(14,14,34,.55);border:1px solid rgba(255,255,255,.11);border-radius:12px;padding:14px 18px;margin:22px 0;overflow-x:auto;white-space:nowrap}
+.lybo .flow{font-family:var(--mono);font-size:13px;color:#A9AFC6;background:var(--term-bg);border:1px solid var(--term-line);border-radius:12px;padding:15px 18px;margin:26px 0;overflow-x:auto;white-space:nowrap}
 .lybo .flow b{color:#F97316;font-weight:600}
 
 /* ---------- footer ---------- */
-footer{background:#1A1A2E;color:#9CA3AF;font-size:13px;padding:34px 0;text-align:center;line-height:1.8;border-top:1px solid #26264A}
-footer .sep{margin:0 8px;color:#3A3A5C}
-footer a{color:#FDBA74}
-footer b{color:#fff}
+footer{background:var(--bg);color:var(--mut);font-size:13.5px;padding:40px 0;text-align:center;line-height:1.9;border-top:1px solid var(--line)}
+footer .logo{justify-content:center;margin-bottom:10px}
+footer .logo-word{font-size:17px}
+footer .sep{margin:0 8px;color:#D1D5DB}
+footer b{color:var(--ink)}
+footer a{color:var(--brand)}
 
-@media (max-width:640px){
+@media (max-width:960px){
+  .hero-grid{grid-template-columns:1fr;gap:44px}
+  .mock-wrap{max-width:520px}
+  .mock-chip{right:0}
+}
+@media (max-width:800px){
   .nav-links{display:none}
-  section{padding:48px 0}
+}
+@media (max-width:640px){
+  section{padding:56px 0}
+  .hero{padding-top:48px}
   .hero-strip{font-size:12px}
   .diagram .mermaid{min-width:520px}
 }
@@ -162,41 +209,105 @@ footer b{color:#fff}
 </head>
 <body>
 
-<!-- ============ 1. HERO ============ -->
-<header class="hero">
+<!-- ============ 1. NAV + HERO ============ -->
+<nav class="topnav">
+  <div class="wrap nav-inner">
+    <a class="logo" href="#top"><svg class="lybo-logomark" width="34" height="34" viewBox="0 0 60 60" fill="none" aria-hidden="true">
+      <style>
+        @keyframes lyboDrawLine{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+        @keyframes lyboPixelIn{0%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(1.2)}100%{opacity:var(--lybo-final-opacity,1);transform:scale(1)}}
+        @keyframes lyboPopIn{0%{transform:scale(0);opacity:0}70%{transform:scale(1.5);opacity:1}100%{transform:scale(1);opacity:1}}
+        .lybo-solid-l{stroke-dasharray:100;stroke-dashoffset:100;animation:lyboDrawLine 1s cubic-bezier(0.2,0.8,0.2,1) forwards}
+        .lybo-pixel{opacity:0;transform-origin:center;transform-box:fill-box;animation:lyboPixelIn 0.6s cubic-bezier(0.175,0.885,0.32,1.275) forwards}
+        .lybo-bridge-dot{opacity:0;transform-origin:center;transform-box:fill-box;animation:lyboPopIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275) forwards}
+        .lybo-p-i-1{animation-delay:0.6s;--lybo-final-opacity:1}
+        .lybo-p-i-2{animation-delay:0.7s;--lybo-final-opacity:0.6}
+        .lybo-p-i-3{animation-delay:0.8s;--lybo-final-opacity:1}
+        .lybo-p-i-4{animation-delay:0.9s;--lybo-final-opacity:0.6}
+        .lybo-orange-path{animation-delay:0.2s}
+        .lybo-p-o-1{animation-delay:0.8s;--lybo-final-opacity:1}
+        .lybo-p-o-2{animation-delay:0.9s;--lybo-final-opacity:0.6}
+        .lybo-p-o-3{animation-delay:1.0s;--lybo-final-opacity:1}
+        .lybo-p-o-4{animation-delay:1.1s;--lybo-final-opacity:0.6}
+        .lybo-dot-1{animation-delay:1.0s}
+        .lybo-dot-2{animation-delay:1.1s}
+        .lybo-dot-3{animation-delay:1.2s}
+      </style>
+      <g transform="translate(1,1)">
+        <path class="lybo-solid-l" d="M 5,25 V 55 H 35" fill="none" stroke="#4f46e5" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect class="lybo-pixel lybo-p-i-1" x="2" y="15" width="6" height="6" rx="1" fill="#6366f1"/>
+        <rect class="lybo-pixel lybo-p-i-2" x="2" y="6" width="6" height="6" rx="1" fill="#818cf8"/>
+        <rect class="lybo-pixel lybo-p-i-3" x="38" y="52" width="6" height="6" rx="1" fill="#6366f1"/>
+        <rect class="lybo-pixel lybo-p-i-4" x="47" y="52" width="6" height="6" rx="1" fill="#818cf8"/>
+        <path class="lybo-solid-l lybo-orange-path" d="M 55,35 V 5 H 25" fill="none" stroke="#f97316" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect class="lybo-pixel lybo-p-o-1" x="52" y="39" width="6" height="6" rx="1" fill="#fb923c"/>
+        <rect class="lybo-pixel lybo-p-o-2" x="52" y="48" width="6" height="6" rx="1" fill="#fdba74"/>
+        <rect class="lybo-pixel lybo-p-o-3" x="16" y="2" width="6" height="6" rx="1" fill="#fb923c"/>
+        <rect class="lybo-pixel lybo-p-o-4" x="7" y="2" width="6" height="6" rx="1" fill="#fdba74"/>
+        <circle class="lybo-bridge-dot lybo-dot-1" cx="20" cy="40" r="3" fill="#6366f1"/>
+        <circle class="lybo-bridge-dot lybo-dot-2" cx="30" cy="30" r="3" fill="#db2777"/>
+        <circle class="lybo-bridge-dot lybo-dot-3" cx="40" cy="20" r="3" fill="#f97316"/>
+      </g>
+    </svg><span class="logo-word">Lybo<span class="ai">AI</span></span></a>
+    <span class="nav-links">
+      <a href="#built">What we built</a>
+      <a href="#how">How it works</a>
+      <a href="#blueprint">Blueprint</a>
+      <a href="#playground">Playground</a>
+      <a href="#hosting">Hosting</a>
+      <a href="#lyboai">LyboAI</a>
+    </span>
+    <a class="nav-cta" href="#" data-todo="repo-url">Get the toolkit</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
   <div class="wrap">
-    <nav class="nav">
-      <span class="logo">Lybo<span class="ai">AI</span><span class="divider">/</span><span class="product"><b>Remi</b> × Pinch</span></span>
-      <span class="nav-links">
-        <a href="#built">What we built</a>
-        <a href="#how">How it works</a>
-        <a href="#blueprint">Blueprint</a>
-        <a href="#playground">Playground</a>
-        <a href="#hosting">Host it</a>
-      </span>
-    </nav>
-    <div class="hero-inner">
-      <p class="eyebrow">A LyboAI product</p>
-      <h1>Remi — the AI payments <span class="grad">teammate</span> for Pinch merchants</h1>
-      <p class="sub">Describe how you charge in plain English. A deterministic compiler builds it on Pinch, runs it, and fixes it when payments fail.</p>
-      <div class="badges">
-        <span class="badge"><span class="dot"></span>Built on the Pinch Payments API</span>
-        <span class="badge">First Pinch MCP</span>
-        <span class="badge">#PinchMeIWant50K</span>
+    <div class="hero-grid">
+      <div>
+        <p class="eyebrow">A LyboAI product · #PinchMeIWant50K</p>
+        <h1 class="display">Run Your Payments<br/><span class="grad-flare">Autonomously</span><br/><span class="grad-orange">with Lybo Remi</span></h1>
+        <p class="sub">Describe how you charge in plain English. A deterministic compiler builds it on Pinch, runs it, and fixes it when payments fail.</p>
+        <div class="ctas">
+          <a class="btn btn-primary" href="#playground">Try the playground →</a>
+          <a class="btn btn-secondary" href="#blueprint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>View the blueprint</a>
+        </div>
+        <div class="trust">
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Sandbox-safe — approval-gated writes</span>
+          <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Built on the Pinch API</span>
+        </div>
       </div>
-      <div class="ctas">
-        <a class="btn btn-primary" href="#playground">Try the playground</a>
-        <a class="btn btn-ghost" href="#" data-todo="repo-url">Get the toolkit</a>
-      </div>
-      <div class="hero-strip">
-        <span><b>19</b> MCP tools</span>
-        <span><b>12</b> read · <b>7</b> guarded writes</span>
-        <span>stdio + Streamable HTTP</span>
-        <span>every write needs <b>confirm:true</b></span>
-        <span>sandbox-verified</span>
+      <div class="mock-wrap">
+        <div class="mock">
+          <div class="mock-chip">
+            <div class="lbl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>RECOVERED</div>
+            <div class="amt">$600.00</div>
+            <div class="bar"><i></i></div>
+          </div>
+          <div class="mock-bar"><span class="mock-dots"><i></i><i></i><i></i></span><span class="mock-title">Remi · Payments front desk — Live Preview</span></div>
+          <div class="mock-body">
+            <div><div class="mock-label">COACH (OWNER)</div><div class="mock-user">Why did Sarah's payment fail?</div></div>
+            <div class="mock-alert">
+              <div class="mock-label">REMI · NEEDS APPROVAL</div>
+              Payment dishonoured — insufficient funds. Soft decline, customer-side. Retry Friday + send this note?
+              <div class="mock-btns"><span class="mock-btn solid">Approve</span><span class="mock-btn ghost">Edit</span></div>
+            </div>
+            <div class="mock-done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><span><b>REMI</b> — Retry scheduled · note drafted</span></div>
+          </div>
+        </div>
       </div>
     </div>
+    <div class="hero-strip">
+      <span><b>19</b> MCP tools</span>
+      <span><b>12</b> read · <b>7</b> guarded writes</span>
+      <span>stdio + Streamable HTTP</span>
+      <span>every write needs <b>confirm:true</b></span>
+      <span><b>First Pinch MCP</b></span>
+      <span>sandbox-verified</span>
+    </div>
+    <a class="discover" href="#built"><span>DISCOVER MORE</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></a>
   </div>
+  <svg class="wave" viewBox="0 0 1440 58" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="wavegrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#F26522"/><stop offset="1" stop-color="#7C5CFC"/></linearGradient></defs><path d="M0 28 C 240 56, 480 2, 720 28 S 1200 56, 1440 28" stroke="url(#wavegrad)" stroke-width="2" fill="none" opacity=".35"/></svg>
 </header>
 
 <!-- ============ 2. WHAT WE BUILT ============ -->
@@ -207,25 +318,25 @@ footer b{color:#fff}
     <p class="lead">A 48-hour hackathon build: an unofficial community MCP server for the Pinch Payments API, an agent that uses it responsibly, a live reference integration, and everything packaged so any platform can do the same.</p>
     <div class="grid grid-4">
       <div class="card">
-        <div class="icon">🔌</div>
+        <div class="icon tint-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01"/><path d="M6 18h.01"/></svg></div>
         <h3>pinch-mcp</h3>
         <p>A 19-tool MCP server over the Pinch API — payments, payers, subscriptions with stall detection, cashflow summaries, payer statements, split-bill tracking, and a dishonour-diagnosis map. stdio + Streamable HTTP. Every write is approval-gated: no <code>confirm:true</code>, no API call.</p>
         <div class="tags"><span class="tag">12 read</span><span class="tag warn">7 guarded writes</span><span class="tag ok">confirm-guard</span></div>
       </div>
       <div class="card">
-        <div class="icon">🤖</div>
+        <div class="icon tint-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
         <h3>Remi agent</h3>
         <p>The AI payments teammate: <b>Design</b> billing from plain English, <b>Do</b> collections (links, subscriptions, splits), <b>Ask</b> instant money questions, <b>Fix</b> failed payments with diagnosed causes and approved recoveries. Ships in three deployment shapes on LyboAI.</p>
         <div class="tags"><span class="tag">Design</span><span class="tag">Do</span><span class="tag">Ask</span><span class="tag">Fix</span></div>
       </div>
       <div class="card">
-        <div class="icon">🏟️</div>
+        <div class="icon tint-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div>
         <h3>CoachPlus integration</h3>
         <p>A live reference deployment: the Billing &amp; Payments panel with a cashflow digest and needs-attention feed, Pinch-powered collections (payment links, real recurring subscriptions, webhooks), and Remi embedded as the coach's payments front desk.</p>
         <div class="tags"><span class="tag ok">live reference</span><span class="tag">Pinch collections</span></div>
       </div>
       <div class="card">
-        <div class="icon">🧰</div>
+        <div class="icon tint-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>
         <h3>The Toolkit</h3>
         <p>Everything packaged for reuse: the agent pack (system prompt, playbooks, dishonour taxonomy, guardrails), recipes for Claude Desktop / LyboAI / widget embeds, a sandbox seed script — and this playground.</p>
         <div class="tags"><span class="tag">agent pack</span><span class="tag">recipes</span><span class="tag">playground</span></div>
@@ -235,7 +346,7 @@ footer b{color:#fff}
 </section>
 
 <!-- ============ 3. HOW IT WORKS ============ -->
-<section id="how">
+<section id="how" class="alt">
   <div class="wrap">
     <p class="kicker">How it works</p>
     <h2>One MCP server, every host</h2>
@@ -301,7 +412,7 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
 </section>
 
 <!-- ============ 5. PLAYGROUND ============ -->
-<section id="playground">
+<section id="playground" class="alt">
   <div class="wrap">
     <p class="kicker">Playground</p>
     <h2>Talk to the tools</h2>
@@ -319,6 +430,7 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
         <button class="chip" data-demo="failed">Any failed payments?</button>
         <button class="chip" data-demo="split">Who owes on the studio rent split?</button>
         <button class="chip" data-demo="blueprint">Design my billing</button>
+        <button class="chip-reset" id="demo-reset" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset</button>
       </div>
       <div class="console" id="demo-console">
         <div class="empty"># pick a question above — every response below is a real capture from the Pinch sandbox (no network needed)</div>
@@ -364,6 +476,7 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
       <div class="run-row">
         <button class="btn btn-run" id="lv-run">Run tool</button>
         <span style="font-size:13px;color:var(--mut)">initialize → notifications/initialized → tools/call, per the MCP Streamable HTTP spec</span>
+        <button class="chip-reset" id="live-reset" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset</button>
       </div>
       <div class="console" id="live-console">
         <div class="empty"># results appear here</div>
@@ -381,21 +494,21 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
     <p class="lead">pinch-mcp is an unofficial community MCP server for the Pinch Payments API. Your merchants, your keys — credentials are never shared or proxied by anyone else.</p>
     <div class="grid grid-3">
       <div class="card">
-        <div class="icon">📦</div>
+        <div class="icon tint-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01"/><path d="M6 18h.01"/></svg></div>
         <h3>Per-platform instance</h3>
         <p>One process per merchant or platform, credentials via env vars. The simplest and safest default — exactly what the Claude Desktop quickstart sets up.</p>
         <div class="tags" style="margin-bottom:14px"><span class="tag ok">safest default</span></div>
         <div class="cmd">PINCH_MERCHANT_ID=mch_… PINCH_SECRET_KEY=sk_… node dist/index.js<button class="copy-btn" data-copy="PINCH_MERCHANT_ID=mch_… PINCH_SECRET_KEY=sk_… node dist/index.js">copy</button></div>
       </div>
       <div class="card">
-        <div class="icon">🌐</div>
+        <div class="icon tint-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg></div>
         <h3>Shared multi-tenant endpoint</h3>
         <p>One hosted process; each caller brings their own keys per request via <code>x-pinch-merchant-id</code> / <code>x-pinch-secret-key</code> / <code>x-pinch-env</code> headers. OAuth tokens cached per merchant+env, header secrets never logged, <code>--cors</code> answers browser preflights. Without <code>--allow-live</code>, the server refuses <code>x-pinch-env: live</code> outright.</p>
         <div class="tags" style="margin-bottom:14px"><span class="tag">header creds</span><span class="tag warn">test-only by default</span></div>
         <div class="cmd">node dist/index.js --http 8787 --cors<button class="copy-btn" data-copy="node dist/index.js --http 8787 --cors">copy</button></div>
       </div>
       <div class="card">
-        <div class="icon">🧩</div>
+        <div class="icon tint-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="14" y="3" width="7" height="7" rx="1"/><path d="M10 21V8a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H3"/></svg></div>
         <h3>Library import</h3>
         <p><code>buildServer()</code> is exported from the built module — embed the fully-wired MCP server, all 19 tools, inside your own Node process and connect whatever transport you like.</p>
         <div class="tags" style="margin-bottom:14px"><span class="tag">embed anywhere</span></div>
@@ -407,7 +520,7 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
 </section>
 
 <!-- ============ 7. LYBOAI ============ -->
-<section class="lybo" id="lyboai">
+<section class="lybo alt" id="lyboai">
   <div class="wrap">
     <p class="kicker">Built on the LyboAI agents platform</p>
     <h2>From chatbots to agents</h2>
@@ -415,13 +528,13 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
     <div class="flow">merchant message → <b>flow engine</b> → knowledge grounding → <b>MCP tool call</b> (preview) → <b>human approval gate</b> → <b>confirm:true</b> → money moves</div>
     <div class="grid grid-2">
       <div class="card">
-        <div class="icon">💬</div>
+        <div class="icon tint-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
         <h3>payments-support</h3>
         <p>Standalone Remi: a ready-to-instantiate template whose whole job is payments. Design billing conversationally, answer money questions from live Pinch data, triage dishonours and prepare recoveries — every write held for approval.</p>
         <div class="tags"><span class="tag">standalone Remi</span><span class="tag">template</span></div>
       </div>
       <div class="card">
-        <div class="icon">🧭</div>
+        <div class="icon tint-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" x2="6" y1="3" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></div>
         <h3>support-with-remi</h3>
         <p>Your existing support agent, with Remi as its payments <i>workflow</i>: general questions stay with your bot; anything payments-shaped routes into Remi's Design/Do/Ask/Fix branch with identical guard language. The CoachPlus Support Agent model.</p>
         <div class="tags"><span class="tag">your agent + Remi</span><span class="tag">workflow branch</span></div>
@@ -433,14 +546,34 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
 <!-- ============ 8. FOOTER ============ -->
 <footer>
   <div class="wrap">
-    Built by <b>Rajan Dua</b> (LyboTech Group) for the Pinch <i>"Pinch Me, I Want 50K"</i> hackathon
-    <span class="sep">·</span> unofficial community project, not affiliated with Pinch Payments
-    <span class="sep">·</span> sandbox only
+    <a class="logo" href="#top"><svg width="28" height="28" viewBox="0 0 100 100" role="img" aria-label="LyboAI">
+      <rect width="100" height="100" rx="20" fill="#1e1b4b"/>
+      <g transform="translate(50,50) scale(1.3)"><g transform="translate(-30,-30)">
+        <path d="M 5,25 V 55 H 35" stroke="#6366f1" stroke-width="6" stroke-linecap="round" fill="none"/>
+        <rect x="2" y="15" width="6" height="6" rx="1" fill="#818cf8"/>
+        <rect x="2" y="6" width="6" height="6" rx="1" fill="#a5b4fc" opacity="0.6"/>
+        <rect x="38" y="52" width="6" height="6" rx="1" fill="#818cf8"/>
+        <rect x="47" y="52" width="6" height="6" rx="1" fill="#a5b4fc" opacity="0.6"/>
+        <path d="M 55,35 V 5 H 25" stroke="#f97316" stroke-width="6" stroke-linecap="round" fill="none"/>
+        <rect x="52" y="39" width="6" height="6" rx="1" fill="#fb923c"/>
+        <rect x="52" y="48" width="6" height="6" rx="1" fill="#fdba74" opacity="0.6"/>
+        <rect x="16" y="2" width="6" height="6" rx="1" fill="#fb923c"/>
+        <rect x="7" y="2" width="6" height="6" rx="1" fill="#fdba74" opacity="0.6"/>
+        <circle cx="20" cy="40" r="3" fill="#6366f1"/>
+        <circle cx="30" cy="30" r="3" fill="#db2777"/>
+        <circle cx="40" cy="20" r="3" fill="#f97316"/>
+      </g></g>
+    </svg><span class="logo-word">Lybo<span class="ai">AI</span></span></a>
+    <div>
+      Built by <b>Rajan Dua</b> (LyboTech Group) for the Pinch <i>"Pinch Me, I Want 50K"</i> hackathon
+      <span class="sep">·</span> unofficial community project, not affiliated with Pinch Payments
+      <span class="sep">·</span> sandbox only
+    </div>
   </div>
 </footer>
 
 <script>
-mermaid.initialize({
+if (typeof mermaid !== "undefined") mermaid.initialize({
   startOnLoad: true,
   securityLevel: "loose",
   theme: "base",
@@ -456,6 +589,22 @@ mermaid.initialize({
     fontSize: "13px"
   }
 });
+(function () {
+  var links = document.querySelectorAll(".nav-links a");
+  var ids = ["built", "how", "blueprint", "playground", "hosting", "lyboai"];
+  function spy() {
+    var y = window.scrollY + 140, cur = null;
+    ids.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && el.offsetTop <= y) cur = id;
+    });
+    links.forEach(function (a) {
+      a.classList.toggle("active", a.getAttribute("href") === "#" + cur);
+    });
+  }
+  window.addEventListener("scroll", spy, { passive: true });
+  spy();
+})();
 </script>
 
 <script>
@@ -911,7 +1060,7 @@ function appendExchange(consoleEl, question, toolLine, summary, payloadText, isE
     m.appendChild(pre);
   }
   consoleEl.appendChild(m);
-  consoleEl.scrollTop = consoleEl.scrollHeight;
+  consoleEl.scrollTop = 0;
 }
 
 /* ---------------- tabs ---------------- */
@@ -932,11 +1081,24 @@ tabDemo.addEventListener("click", function () { selectTab("demo"); });
 tabLive.addEventListener("click", function () { selectTab("live"); });
 
 /* ---------------- demo mode ---------------- */
+var DEMO_HINT = "# pick a question above — every response below is a real capture from the Pinch sandbox (no network needed)";
+var LIVE_HINT = "# results appear here";
+function clearConsole(consoleEl) {
+  while (consoleEl.firstChild) consoleEl.removeChild(consoleEl.firstChild);
+}
+function resetConsole(consoleEl, hint) {
+  clearConsole(consoleEl);
+  consoleEl.appendChild(el("div", "empty", hint));
+  consoleEl.scrollTop = 0;
+}
 var demoConsole = document.getElementById("demo-console");
-document.querySelectorAll(".chip[data-demo]").forEach(function (btn) {
+var demoChips = Array.prototype.slice.call(document.querySelectorAll(".chip[data-demo]"));
+demoChips.forEach(function (btn) {
   btn.addEventListener("click", function () {
     var d = DEMOS[btn.getAttribute("data-demo")];
     if (!d) return;
+    demoChips.forEach(function (b) { b.classList.toggle("active", b === btn); });
+    clearConsole(demoConsole);
     appendExchange(
       demoConsole,
       d.question,
@@ -946,6 +1108,10 @@ document.querySelectorAll(".chip[data-demo]").forEach(function (btn) {
       false
     );
   });
+});
+document.getElementById("demo-reset").addEventListener("click", function () {
+  demoChips.forEach(function (b) { b.classList.toggle("active", false); });
+  resetConsole(demoConsole, DEMO_HINT);
 });
 
 /* ---------------- live mode: MCP Streamable HTTP client ---------------- */
@@ -1009,6 +1175,9 @@ function findResponse(messages, id) {
 
 var runBtn = document.getElementById("lv-run");
 var liveConsole = document.getElementById("live-console");
+document.getElementById("live-reset").addEventListener("click", function () {
+  resetConsole(liveConsole, LIVE_HINT);
+});
 
 runBtn.addEventListener("click", function () {
   var endpoint = document.getElementById("lv-endpoint").value.trim();
@@ -1038,6 +1207,7 @@ runBtn.addEventListener("click", function () {
 
   runBtn.disabled = true;
   runBtn.textContent = "Running…";
+  clearConsole(liveConsole);
   appendExchange(liveConsole, "Run " + tool, "→ POST " + endpoint + "  (initialize → notifications/initialized → tools/call)", null, null, false);
 
   var initId = ++rpcId;

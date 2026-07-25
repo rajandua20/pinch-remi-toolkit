@@ -1581,6 +1581,168 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
+  server.registerTool(
+    track("pinch_settlement_summary"),
+    {
+      title: "Settlement summary (see the money)",
+      description:
+        "Reconciliation-lite: what Pinch has transferred to the merchant's bank and what made each transfer up. " +
+        "Composed from GET /transfers (net amount, date, status) plus per-transfer line items " +
+        "(GET /transfers/items/{id}: Settlement/Dishonour/Refund/fee lines, detailed for up to 10 transfers per " +
+        "call), cross-referenced with processed payments for payer names. Also reports the UNSETTLED bucket: " +
+        "successfully collected payments with no actualTransferDate yet — money earned but not yet in the bank. " +
+        "Default lookback 30 days (max 90).",
+      inputSchema: {
+        days: z
+          .number()
+          .int()
+          .min(1)
+          .max(90)
+          .optional()
+          .describe("Lookback window in days for transfers and processed payments (default 30, max 90)"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    safe(async ({ days }) => {
+      const client = getClient();
+      const periodDays = days ?? 30;
+      const cutoff = todayPlus(-periodDays);
+
+      // Transfers + processed payments (for names and the unsettled bucket).
+      const [transfersResult, processedResult] = await Promise.all([
+        client.getAllPages<AnyRecord>("/transfers"),
+        client.getAllPages<AnyRecord>("/payments/processed", { startDate: cutoff }),
+      ]);
+
+      // Payment lookup for payer names on line items (line items carry no payer).
+      const paymentById = new Map<string, AnyRecord>();
+      for (const p of processedResult.items) {
+        if (typeof p.id === "string") paymentById.set(p.id, p);
+      }
+      const nameOf = (p: AnyRecord | undefined): string | undefined =>
+        p?.payer?.fullName ??
+        ([p?.payer?.firstName, p?.payer?.lastName].filter(Boolean).join(" ") || undefined);
+
+      // Transfers within the window, most recent first; line items for ≤10.
+      const inWindow = transfersResult.items
+        .filter((t) => pinchDate(t.transferDate ?? t.date) >= cutoff)
+        .sort((a, b) => pinchDate(b.transferDate ?? b.date).localeCompare(pinchDate(a.transferDate ?? a.date)));
+      const DETAIL_CAP = 10;
+      const detailTruncated = inWindow.length > DETAIL_CAP;
+
+      const transfers: AnyRecord[] = [];
+      let settledCents = 0;
+      let feesCents = 0;
+      let sawFees = false;
+
+      for (let i = 0; i < inWindow.length; i++) {
+        const t = inWindow[i];
+        const netCents = typeof t.amount === "number" ? t.amount : 0;
+        settledCents += netCents;
+        const entry: AnyRecord = {
+          transferId: t.id,
+          date: pinchDate(t.transferDate ?? t.date) || null,
+          status: t.status ?? null,
+          reference: t.reference ?? t.statementReference ?? null,
+          netCents,
+          netAud: formatAud(netCents),
+          totalCents: null as number | null,
+          totalAud: null as string | null,
+          feeCents: null as number | null,
+          feeAud: null as string | null,
+          paymentCount: 0,
+          payments: [] as AnyRecord[],
+        };
+
+        if (i < DETAIL_CAP && t.id) {
+          try {
+            const { items: lines } = await client.getAllPages<AnyRecord>(
+              `/transfers/items/${encodeURIComponent(t.id)}`,
+            );
+            // Line-item field names vary between the guide (paymentId/amount/
+            // feeAmount) and the OpenAPI example (id/gross/fees/total) — read both.
+            let gross = 0;
+            let fees = 0;
+            const settlements: AnyRecord[] = [];
+            for (const line of lines) {
+              const lineGross = line.gross ?? line.amount ?? 0;
+              const lineFees = line.fees ?? line.feeAmount ?? 0;
+              const type = String(line.type ?? "").toLowerCase();
+              gross += typeof lineGross === "number" ? lineGross : 0;
+              fees += typeof lineFees === "number" ? lineFees : 0;
+              if (type === "settlement") settlements.push(line);
+            }
+            const paymentIds = settlements.map((l) => l.id ?? l.paymentId).filter(Boolean);
+            entry.totalCents = gross;
+            entry.totalAud = formatAud(gross);
+            entry.feeCents = fees;
+            entry.feeAud = formatAud(fees);
+            entry.paymentCount = settlements.length;
+            entry.payments = settlements.slice(0, 10).map((l) => {
+              const pid = String(l.id ?? l.paymentId ?? "");
+              const amount = l.gross ?? l.amount ?? 0;
+              return {
+                paymentId: pid,
+                payerName: nameOf(paymentById.get(pid)) ?? l.description ?? "(unknown)",
+                amountAud: formatAud(typeof amount === "number" ? amount : 0),
+              };
+            });
+            feesCents += fees;
+            sawFees = true;
+          } catch {
+            entry.payments = [];
+            entry.note = "line items unavailable for this transfer";
+          }
+        } else if (i >= DETAIL_CAP) {
+          entry.note = "line items not fetched (per-call detail cap of 10 transfers)";
+        }
+        transfers.push(entry);
+      }
+
+      // Unsettled: successfully collected but no actualTransferDate anywhere —
+      // money the merchant has earned that hasn't reached the bank yet.
+      // Dishonoured payments are failures, NOT unsettled money.
+      const hasTransferred = (p: AnyRecord): boolean => {
+        if (p.actualTransferDate) return true;
+        const attempts: AnyRecord[] = Array.isArray(p.attempts) ? p.attempts : [];
+        return attempts.some((a) => a.actualTransferDate);
+      };
+      const unsettledPayments = processedResult.items.filter(
+        (p) => SUCCESS_STATUSES.has(p.status) && !hasTransferred(p),
+      );
+      const unsettledCents = unsettledPayments.reduce(
+        (s, p) => s + (typeof p.amount === "number" ? p.amount : 0),
+        0,
+      );
+
+      return jsonResult({
+        periodDays,
+        transfers,
+        unsettled: {
+          count: unsettledPayments.length,
+          totalCents: unsettledCents,
+          totalAud: formatAud(unsettledCents),
+          note: "processed but not yet transferred (successful payments with no actualTransferDate)",
+        },
+        totals: {
+          settledCents,
+          settledAud: formatAud(settledCents),
+          feesCents: sawFees ? feesCents : null,
+          feesAud: sawFees ? formatAud(feesCents) : null,
+          unsettledCents,
+          unsettledAud: formatAud(unsettledCents),
+        },
+        truncated: transfersResult.truncated || processedResult.truncated,
+        detailTruncated,
+        generatedAt: new Date().toISOString(),
+        basisNote:
+          "Composed from GET /transfers (net per transfer) + GET /transfers/items/{id} line items (Settlement/" +
+          "Dishonour/Refund/fee lines; detailed for the 10 most recent in-window transfers) and processed payments " +
+          "(payer names + unsettled bucket). Amounts are integer cents, AUD; transfer net = gross minus fees/clawbacks.",
+      });
+    }),
+  );
+
   // =========================================================================
   // WRITE TOOLS — all guarded behind confirm:true
   // =========================================================================

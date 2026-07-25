@@ -9,7 +9,7 @@ assistant can **diagnose failed payments in plain English, spot silently stalled
 subscriptions, and prepare recoveries (retries, payment links, refunds) that a
 human approves before any money moves**.
 
-- **12 read tools** — payments, failed-payment triage, payers, subscriptions (with
+- **13 read tools** — payments, failed-payment triage, payers, subscriptions (with
   stall detection), events, a UI-ready cashflow summary, per-payer statements,
   and split-bill status tracking.
 - **7 guarded write tools** — payment links, dishonour retries, capped refunds,
@@ -84,9 +84,38 @@ node dist/index.js --http 8787
 
 Serves the MCP **Streamable HTTP** transport on `POST http://localhost:8787/mcp`
 (stateless — no session affinity needed; safe behind a load balancer), plus a
-plain `GET /healthz` liveness probe. stdio stays active alongside it. Any MCP
-client can `initialize` → `tools/list` → `tools/call` against that URL; this is
-the endpoint a platform-side MCP connector (e.g. LyboAI) should be pointed at.
+plain `GET /healthz` liveness probe and a secret-free `GET /meta`
+(`{name, version, toolCount, env, corsEnabled}`). stdio stays active alongside
+it. Any MCP client can `initialize` → `tools/list` → `tools/call` against that
+URL; this is the endpoint a platform-side MCP connector (e.g. LyboAI) should be
+pointed at.
+
+## Hosting for your own platform(s)
+
+> This is an **unofficial community MCP server** for the Pinch Payments API —
+> merchants authorise it with their **own** API keys; no credentials are shared
+> or proxied by anyone else.
+
+Three deployment patterns:
+
+1. **Per-platform instance (env credentials)** — one process per merchant or
+   platform, credentials via `PINCH_MERCHANT_ID`/`PINCH_SECRET_KEY` env vars.
+   The simplest and safest default; what the Quickstart above sets up.
+2. **Shared multi-tenant endpoint (header credentials + `--cors`)** — run one
+   hosted process (`node dist/index.js --http 8787 --cors`) and let each caller
+   bring their own keys per request via headers:
+   `x-pinch-merchant-id`, `x-pinch-secret-key`, optional `x-pinch-env`
+   (default `test`). Env credentials remain the fallback when headers are
+   absent. OAuth tokens are cached per merchant+env (55 min), header secrets
+   are never logged, and `--cors` (or `--cors-origin <origin>`) enables browser
+   playgrounds by answering OPTIONS preflights. Ideal for a "try the Pinch MCP
+   in your browser" playground against the sandbox.
+   **Never enable `--allow-live` on a public playground** — without that flag
+   the server refuses `x-pinch-env: live` outright, which is the safe default:
+   a shared endpoint should only ever touch test data.
+3. **Library import** — `buildServer(configOverride?)` is exported from
+   `dist/index.js`; embed the fully-wired `McpServer` (all 20 tools) in your
+   own Node process and connect whatever transport you like.
 
 ## Tool catalog
 
@@ -104,6 +133,7 @@ the endpoint a platform-side MCP connector (e.g. LyboAI) should be pointed at.
 | `pinch_cashflow_summary` | read | "How am I doing?" snapshot: collected vs dishonoured (last N days, default 7), upcoming 7/30-day scheduled totals, top 5 payers — stable, UI-card-ready shape |
 | `pinch_payer_statement` | read | Statement of account for one payer (by id or email): chronological lines with plain-English dishonour reasons, totals, and an email-ready `statementText` block |
 | `pinch_get_split_status` | read | Who's paid / pending / failed on a split bill, exposure risk (largest outstanding party + days), and chase-up actions — reconstructed entirely from Pinch data |
+| `pinch_settlement_summary` | read | "See the money": bank transfers with per-transfer line items (settlements, fees, clawbacks) plus the unsettled bucket — collected but not yet transferred |
 | `pinch_create_payment_link` | **write** | Hosted checkout link for a payer (matched/created by email) — the re-collection tool |
 | `pinch_retry_payment` | **write** | Clones a dishonoured payment into a new scheduled payment (default +3 days); warns on hard failures |
 | `pinch_create_refund` | **write** | Full/partial refund, hard-capped by `PINCH_MAX_REFUND_CENTS` |
@@ -138,7 +168,8 @@ The toolkit follows a **Design / Do / Ask / Fix** model:
 - **Design** — `pinch_design_billing` turns a structured billing model into a
   deterministic blueprint (this section).
 - **Do** — provisioning and collection tools (subscriptions, links, splits).
-- **Ask** — read tools: cashflow summary, statements, split status, listings.
+- **Ask** — read tools: cashflow summary, statements, split status, settlement
+  summary (transfers + unsettled money), listings.
 - **Fix** — failure triage: annotated dishonours, guarded retries, refunds.
 
 The AI host (e.g. Remi) extracts the structured model from the merchant's plain
