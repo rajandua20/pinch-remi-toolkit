@@ -11,7 +11,7 @@
  *    diagnosis: plain English, ownership, recommended action, retryability.
  */
 
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
@@ -22,8 +22,27 @@ import { diagnoseDishonour, DISHONOUR_MAP } from "./dishonour-map.js";
 // Shared result helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Cap on the serialized size of any tool result returned to the model
+ * (OWASP GenAI secure-MCP guide §3: enforce size limits on all outputs).
+ * Oversized results are truncated with an explicit marker so the model
+ * knows to narrow the query instead of trusting a partial payload.
+ */
+const MAX_RESULT_CHARS = (() => {
+  const n = Number.parseInt(process.env.PINCH_MCP_MAX_RESULT_CHARS ?? "", 10);
+  return Number.isFinite(n) && n > 1000 ? n : 200_000;
+})();
+
 function jsonResult(payload: unknown): CallToolResult {
-  return { content: [{ type: "text", text: JSON.stringify(payload, null, 2) }] };
+  let text = JSON.stringify(payload, null, 2);
+  if (text.length > MAX_RESULT_CHARS) {
+    const dropped = text.length - MAX_RESULT_CHARS;
+    text =
+      text.slice(0, MAX_RESULT_CHARS) +
+      `\n…[TRUNCATED ${dropped} chars — result exceeded the ${MAX_RESULT_CHARS}-char output cap. ` +
+      `Narrow the query (date range, status filter, pageSize) and retry.]`;
+  }
+  return { content: [{ type: "text", text }] };
 }
 
 function errorResult(message: string, detail?: unknown): CallToolResult {
@@ -808,8 +827,22 @@ export interface RegisterOptions {
   maxRefundCents: number;
 }
 
-/** Register every pinch tool on the given McpServer. Returns the tool names. */
-export function registerPinchTools(server: McpServer, options: RegisterOptions): string[] {
+/** What registerPinchTools reports back to the caller. */
+export interface RegisteredTools {
+  /** Registered tool names, in registration order. */
+  names: string[];
+  /**
+   * SHA-256 over the canonical JSON of every tool's {name, title, description}.
+   * A tool-manifest integrity hash: any change to the tool set or any tool
+   * description changes this value, so clients/operators can pin it and detect
+   * "rug pull" tool mutations (OWASP GenAI secure-MCP guide §2; SlowMist
+   * tool-integrity checklist). Exposed on GET /meta and logged at startup.
+   */
+  toolsHash: string;
+}
+
+/** Register every pinch tool on the given McpServer. Returns names + manifest hash. */
+export function registerPinchTools(server: McpServer, options: RegisterOptions): RegisteredTools {
   const { getClient, maxRefundCents } = options;
   const names: string[] = [];
   const track = (name: string) => {
@@ -817,11 +850,63 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     return name;
   };
 
+  /** Tool manifest (name/title/description) collected for the integrity hash. */
+  const manifest: Array<{ name: string; title?: string; description?: string }> = [];
+
+  /** Audit-log tenant tag; never the merchantId itself, never the secret. */
+  const tenantTag = (): string => {
+    try {
+      return getClient().auditTag;
+    } catch {
+      return "unconfigured";
+    }
+  };
+
+  /**
+   * Wrap a handler with an audit log line per invocation: tool name, outcome,
+   * duration, non-reversible tenant tag. Parameters and results are NEVER
+   * logged (they can carry payer PII); secrets are never in scope here at all.
+   * (OWASP §7 audit trails; SlowMist monitoring & logging; stderr → Cloud Run
+   * structured logs on the hosted deployment.)
+   */
+  const audited = <A extends unknown[]>(
+    name: string,
+    fn: (...args: A) => Promise<CallToolResult>,
+  ): ((...args: A) => Promise<CallToolResult>) => {
+    return async (...args: A): Promise<CallToolResult> => {
+      const started = Date.now();
+      let outcome = "ok";
+      try {
+        const result = await fn(...args);
+        if (result.isError) outcome = "error";
+        return result;
+      } catch (err) {
+        outcome = "exception";
+        throw err;
+      } finally {
+        console.error(
+          `[pinch-mcp] audit tool=${name} outcome=${outcome} ms=${Date.now() - started} tenant=${tenantTag()}`,
+        );
+      }
+    };
+  };
+
+  /** registerTool shim: records the manifest entry + wraps the handler in audit logging. */
+  const reg: McpServer["registerTool"] = (name, config, cb) => {
+    manifest.push({
+      name,
+      title: (config as { title?: string }).title,
+      description: (config as { description?: string }).description,
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return server.registerTool(name, config as any, audited(name, cb as any) as any);
+  };
+
   // =========================================================================
   // READ TOOLS (no side effects)
   // =========================================================================
 
-  server.registerTool(
+  reg(
     track("pinch_health"),
     {
       title: "Pinch health check",
@@ -845,7 +930,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_list_payments"),
     {
       title: "List payments",
@@ -910,7 +995,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_get_payment"),
     {
       title: "Get payment",
@@ -933,7 +1018,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_list_failed_payments"),
     {
       title: "List failed (dishonoured) payments",
@@ -977,7 +1062,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_get_payer"),
     {
       title: "Get payer",
@@ -996,7 +1081,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_list_payers"),
     {
       title: "List payers",
@@ -1028,7 +1113,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_list_subscriptions"),
     {
       title: "List subscriptions (with stall detection)",
@@ -1123,7 +1208,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_get_subscription"),
     {
       title: "Get subscription",
@@ -1144,7 +1229,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_list_events"),
     {
       title: "List events",
@@ -1172,7 +1257,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_cashflow_summary"),
     {
       title: "Cashflow summary",
@@ -1198,7 +1283,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_payer_statement"),
     {
       title: "Payer statement of account",
@@ -1345,7 +1430,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_get_split_status"),
     {
       title: "Split payment status",
@@ -1581,7 +1666,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_settlement_summary"),
     {
       title: "Settlement summary (see the money)",
@@ -1754,7 +1839,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
       "Must be exactly true to execute. Anything else returns a preview of what WOULD happen, for human approval.",
     );
 
-  server.registerTool(
+  reg(
     track("pinch_create_payment_link"),
     {
       title: "Create payment link (guarded)",
@@ -1863,7 +1948,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_retry_payment"),
     {
       title: "Retry a dishonoured payment (guarded)",
@@ -1950,7 +2035,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_create_refund"),
     {
       title: "Create refund (guarded, capped)",
@@ -2031,7 +2116,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_create_subscription"),
     {
       title: "Create subscription (guarded)",
@@ -2370,7 +2455,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_cancel_subscription"),
     {
       title: "Cancel subscription (guarded)",
@@ -2453,7 +2538,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  server.registerTool(
+  reg(
     track("pinch_create_split"),
     {
       title: "Create split payment (guarded)",
@@ -2625,7 +2710,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     throw new Error(`pinch_design_billing description is ${DESIGN_BILLING_DESC.length} chars (max 280).`);
   }
 
-  server.registerTool(
+  reg(
     track("pinch_design_billing"),
     {
       title: "Design billing blueprint (guarded)",
@@ -2929,7 +3014,11 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
     }),
   );
 
-  return names;
+  const toolsHash = createHash("sha256")
+    .update(JSON.stringify(manifest))
+    .digest("hex");
+
+  return { names, toolsHash };
 }
 
 // Re-exported for consumers that want the raw taxonomy (e.g. agent prompts).

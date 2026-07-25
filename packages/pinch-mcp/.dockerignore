@@ -1,5 +1,7 @@
+# SECURITY: credentials must never enter the image
+.env
+
 node_modules
 dist
-.env
-.env.*
 *.log
+.git

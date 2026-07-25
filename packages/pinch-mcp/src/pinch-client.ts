@@ -18,6 +18,8 @@
  *    event payloads) → normalizeKeys() deep-converts everything to camelCase.
  */
 
+import { createHash } from "node:crypto";
+
 const AUTH_URL = "https://auth.getpinch.com.au/connect/token";
 const API_ROOT = "https://api.getpinch.com.au";
 const PINCH_VERSION = "2020.1";
@@ -153,14 +155,36 @@ export interface RequestOptions {
 // Client
 // ---------------------------------------------------------------------------
 
-export class PinchClient {
-  private token: string | null = null;
-  private tokenFetchedAt = 0;
+/**
+ * Process-wide OAuth token cache. SECURITY: the key is a SHA-256 digest of
+ * merchantId + secretKey + env — including the secret in the key means a
+ * caller who knows only a victim's merchantId can NEVER get a cache hit on
+ * the victim's token (multi-tenant HTTP mode accepts caller-supplied creds).
+ * Hashing also keeps raw secrets out of map keys (heap-dump hygiene).
+ */
+const tokenCache = new Map<string, { token: string; fetchedAt: number }>();
 
+export class PinchClient {
   constructor(private readonly config: PinchConfig) {}
+
+  private get cacheKey(): string {
+    return createHash("sha256")
+      .update(`${this.config.merchantId}\u0000${this.config.secretKey}\u0000${this.config.env}`)
+      .digest("hex");
+  }
 
   get env(): "test" | "live" {
     return this.config.env;
+  }
+
+  /**
+   * Non-reversible tenant tag for audit logs: "<env>:<sha256(merchantId)[:12]>".
+   * Lets operators correlate a tenant's calls across log lines without ever
+   * writing the merchantId (or anything derived from the secret) to logs.
+   */
+  get auditTag(): string {
+    const digest = createHash("sha256").update(this.config.merchantId).digest("hex");
+    return `${this.config.env}:${digest.slice(0, 12)}`;
   }
 
   get baseUrl(): string {
@@ -170,8 +194,8 @@ export class PinchClient {
   // -- OAuth2 client-credentials token, cached & refreshed at 55 min --------
 
   private async getToken(): Promise<string> {
-    const fresh = this.token && Date.now() - this.tokenFetchedAt < TOKEN_REFRESH_MS;
-    if (this.token && fresh) return this.token;
+    const cached = tokenCache.get(this.cacheKey);
+    if (cached && Date.now() - cached.fetchedAt < TOKEN_REFRESH_MS) return cached.token;
 
     const basic = Buffer.from(
       `${this.config.merchantId}:${this.config.secretKey}`,
@@ -211,15 +235,13 @@ export class PinchClient {
         "/connect/token",
       );
     }
-    this.token = json.access_token;
-    this.tokenFetchedAt = Date.now();
-    return this.token;
+    tokenCache.set(this.cacheKey, { token: json.access_token, fetchedAt: Date.now() });
+    return json.access_token;
   }
 
   /** Drop the cached token (used after a 403 to force one re-auth). */
   private invalidateToken(): void {
-    this.token = null;
-    this.tokenFetchedAt = 0;
+    tokenCache.delete(this.cacheKey);
   }
 
   // -- Core request with retry ---------------------------------------------

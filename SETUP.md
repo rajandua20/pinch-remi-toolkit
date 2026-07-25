@@ -67,16 +67,17 @@ Then tell Claude the repo URL → gets wired into the landing page buttons.
 ```powershell
 cd C:\Users\rajan\Claude\Projects\pinch-remi-toolkit\packages\pinch-mcp
 gcloud run deploy pinch-mcp --source . --region australia-southeast1 --allow-unauthenticated
-curl https://<url>/healthz ; curl https://<url>/meta
+curl https://pinch-mcp-238547086112.australia-southeast1.run.app/healthz
+curl https://pinch-mcp-238547086112.australia-southeast1.run.app/meta
 ```
-Give Claude the URL → landing playground default + docs get it. Prod LyboAI's mcp connector uses `https://<url>/mcp`.
+**Deployed URL: https://pinch-mcp-238547086112.australia-southeast1.run.app** (⚠️ redeploy required once after the Sat security-hardening commit — the first deploy predated the multi-tenant server). Prod LyboAI's mcp connector uses `https://pinch-mcp-238547086112.australia-southeast1.run.app/mcp`.
 
 ---
 
 ## 3 — LyboAI activation (local AND prod — same steps)
 1. **RE-SEED (required — seed files changed):** local: `npm run db:seed` in apps\api (Docker postgres up); prod: the Migrate+seed workflow (2b).
 2. Dashboard → **Your Agent Family** → **Remi — AI Payments & Billing Agent** → **Deploy** (one click).
-3. Integrations → connect **MCP**: serverUrl = local `http://localhost:3333/mcp` (pinch-mcp running `--http 3333 --cors`; Docker: `host.docker.internal`) or prod = the Cloud Run `/mcp` URL. Test connection → 19 tools.
+3. Integrations → connect **MCP**: serverUrl = local `http://localhost:3333/mcp` (pinch-mcp running `--http 3333 --cors`; Docker: `host.docker.internal`) or prod = `https://pinch-mcp-238547086112.australia-southeast1.run.app/mcp`. Test connection → 19 tools.
 4. Publish Remi (draft → live) → open the bot's **Widget/Channel** settings → copy its **widgetKey**; add your CoachPlus domain(s) to allowed domains (`http://localhost:3000`, `https://thecoachplus.com`).
 5. Chat test: "How did we do this week?" · "Who owes on the studio rent split?" · "Bill Sarah $59/week for a 10-week term with a $100 deposit."
 

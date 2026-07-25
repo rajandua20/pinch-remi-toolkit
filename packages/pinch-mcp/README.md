@@ -85,7 +85,9 @@ node dist/index.js --http 8787
 Serves the MCP **Streamable HTTP** transport on `POST http://localhost:8787/mcp`
 (stateless — no session affinity needed; safe behind a load balancer), plus a
 plain `GET /healthz` liveness probe and a secret-free `GET /meta`
-(`{name, version, toolCount, env, corsEnabled}`). stdio stays active alongside
+(`{name, version, toolCount, toolsHash, env, corsEnabled}` — `toolsHash` is a
+SHA-256 over every tool's name/title/description; pin it to detect any change
+to the tool surface). stdio stays active alongside
 it. Any MCP client can `initialize` → `tools/list` → `tools/call` against that
 URL; this is the endpoint a platform-side MCP connector (e.g. LyboAI) should be
 pointed at.
@@ -94,7 +96,16 @@ pointed at.
 
 > This is an **unofficial community MCP server** for the Pinch Payments API —
 > merchants authorise it with their **own** API keys; no credentials are shared
-> or proxied by anyone else.
+> or proxied by anyone else. Security posture, hardening details, and known
+> limitations: see [SECURITY.md](./SECURITY.md). HTTP mode ships with per-IP
+> rate limiting (`PINCH_MCP_RATE_LIMIT`, default 60 req/min), a 256 KB body
+> cap, slowloris-resistant socket timeouts, per-call audit logging (tool,
+> outcome, duration, hashed tenant tag — never params or secrets), tool-result
+> size caps (`PINCH_MCP_MAX_RESULT_CHARS`, default 200 000), and a `--bind`
+> flag (`--bind 127.0.0.1` for local-only serving; default `0.0.0.0` for
+> container platforms). Reviewed against the OWASP GenAI *Secure MCP Server
+> Development* guide, Palo Alto's MCP-security analysis, and the SlowMist
+> MCP-Security-Checklist — the mapping lives in SECURITY.md.
 
 Three deployment patterns:
 

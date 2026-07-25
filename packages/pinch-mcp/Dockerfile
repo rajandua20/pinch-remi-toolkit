@@ -1,21 +1,31 @@
-# pinch-mcp — multi-tenant hosted MCP server
-# Build:  docker build -t pinch-mcp .
-# Run:    docker run -p 8080:8080 pinch-mcp
-FROM node:22-slim AS build
-WORKDIR /app
-COPY package*.json tsconfig.json ./
-RUN npm install
-COPY src ./src
-RUN npm run build
+# pinch-mcp — hardened container for the hosted multi-tenant HTTP endpoint.
+#
+# Pinned to major.minor; for production deploys pin to a digest, e.g.
+#   FROM node:22.22-slim@sha256:<digest>
+# (resolve with `docker pull node:22.22-slim && docker inspect --format='{{index .RepoDigests 0}}' node:22.22-slim`)
 
-FROM node:22-slim
+FROM node:22.22-slim AS build
 WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY tsconfig.json ./
+COPY src ./src
+RUN npm run build && npm prune --omit=dev
+
+FROM node:22.22-slim
 ENV NODE_ENV=production
-COPY package*.json ./
-RUN npm install --omit=dev && npm cache clean --force
+WORKDIR /app
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
-# Multi-tenant mode: NO credentials in env — each request brings its own via
-# x-pinch-merchant-id / x-pinch-secret-key headers. Live env stays refused
-# (never add --allow-live on a shared/public endpoint).
-# Cloud Run injects PORT; default 8080 elsewhere.
-CMD ["sh", "-c", "node dist/index.js --http ${PORT:-8080} --cors"]
+COPY package.json README.md SECURITY.md ./
+
+# Never run as root — the official image ships a non-root `node` user.
+USER node
+
+EXPOSE 8080
+
+# Public playground posture: CORS on, sandbox-only (live env refused because
+# --allow-live is NOT passed), per-request header credentials, no env creds
+# baked in (.dockerignore excludes .env). Rate limit tunable via
+# PINCH_MCP_RATE_LIMIT (requests/min/IP, default 60).
+CMD ["node", "dist/index.js", "--http", "8080", "--cors"]
