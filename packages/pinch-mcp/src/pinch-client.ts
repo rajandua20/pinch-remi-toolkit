@@ -177,14 +177,23 @@ export class PinchClient {
     return this.config.env;
   }
 
+  /** Acting-as sub-merchant (managed merchants), when set. */
+  get currentMerchant(): string | undefined {
+    return this.config.currentMerchant;
+  }
+
   /**
-   * Non-reversible tenant tag for audit logs: "<env>:<sha256(merchantId)[:12]>".
-   * Lets operators correlate a tenant's calls across log lines without ever
-   * writing the merchantId (or anything derived from the secret) to logs.
+   * Non-reversible tenant tag for audit logs: "<env>:<sha256(merchantId)[:12]>"
+   * plus ":<sha256(currentMerchant)[:8]>" when acting on behalf of a
+   * sub-merchant. Lets operators correlate a tenant's (and sub-merchant's)
+   * calls across log lines without writing identifiers or secrets to logs.
    */
   get auditTag(): string {
     const digest = createHash("sha256").update(this.config.merchantId).digest("hex");
-    return `${this.config.env}:${digest.slice(0, 12)}`;
+    const base = `${this.config.env}:${digest.slice(0, 12)}`;
+    if (!this.config.currentMerchant) return base;
+    const sub = createHash("sha256").update(this.config.currentMerchant).digest("hex");
+    return `${base}:${sub.slice(0, 8)}`;
   }
 
   get baseUrl(): string {

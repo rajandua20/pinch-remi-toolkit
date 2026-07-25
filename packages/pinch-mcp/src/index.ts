@@ -115,7 +115,15 @@ function credentialsFromHeaders(
   if (envRaw === "live" && !allowLive) {
     return { error: "x-pinch-env: live refused — this server was not started with --allow-live" };
   }
-  return { config: { merchantId, secretKey, env: envRaw } };
+  // Managed merchants (platform mode): a platform's app credentials may act on
+  // behalf of one sub-merchant per request via the Pinch Current-Merchant
+  // header. Format-validated here; Pinch enforces the actual authorisation
+  // (an mch_ not owned by these credentials is rejected upstream).
+  const currentMerchant = headerValue(req, "x-pinch-current-merchant");
+  if (currentMerchant !== undefined && !/^mch_[A-Za-z0-9_-]{4,64}$/.test(currentMerchant)) {
+    return { error: 'x-pinch-current-merchant must look like "mch_..."' };
+  }
+  return { config: { merchantId, secretKey, env: envRaw, currentMerchant } };
 }
 
 // ---------------------------------------------------------------------------
@@ -224,7 +232,7 @@ function applyCorsHeaders(res: http.ServerResponse, opts: HttpOptions): void {
   res.setHeader(
     "Access-Control-Allow-Headers",
     "content-type, authorization, mcp-protocol-version, mcp-session-id, last-event-id, " +
-      "x-pinch-merchant-id, x-pinch-secret-key, x-pinch-env",
+      "x-pinch-merchant-id, x-pinch-secret-key, x-pinch-env, x-pinch-current-merchant",
   );
   res.setHeader("Access-Control-Expose-Headers", "mcp-session-id, mcp-protocol-version");
   res.setHeader("Access-Control-Max-Age", "86400");

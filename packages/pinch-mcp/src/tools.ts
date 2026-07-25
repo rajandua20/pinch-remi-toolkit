@@ -1134,6 +1134,7 @@ export function registerPinchTools(server: McpServer, options: RegisterOptions):
       const health = await client.health();
       return jsonResult({
         ...health,
+        actingAs: client.currentMerchant ?? null,
         note:
           client.env === "test"
             ? "Sandbox (test) environment — no real money moves."

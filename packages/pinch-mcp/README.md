@@ -117,7 +117,11 @@ Three deployment patterns:
    hosted process (`node dist/index.js --http 8787 --cors`) and let each caller
    bring their own keys per request via headers:
    `x-pinch-merchant-id`, `x-pinch-secret-key`, optional `x-pinch-env`
-   (default `test`). Env credentials remain the fallback when headers are
+   (default `test`), and — for **platform mode** (Pinch Managed Merchants) —
+   optional `x-pinch-current-merchant: mch_…` so a platform's app credentials
+   act on behalf of one sub-merchant per request (Pinch authorises the
+   mapping; the header is format-validated here and reflected in
+   `pinch_health.actingAs` and the audit log's hashed tenant tag). Env credentials remain the fallback when headers are
    absent. OAuth tokens are cached per merchant+env (55 min), header secrets
    are never logged, and `--cors` (or `--cors-origin <origin>`) enables browser
    playgrounds by answering OPTIONS preflights. Ideal for a "try the Pinch MCP
