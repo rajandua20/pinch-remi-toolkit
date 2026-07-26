@@ -1,0 +1,4 @@
+node_modules/
+dist/
+.env
+coach-payments.local.json

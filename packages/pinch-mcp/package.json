@@ -20,7 +20,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "smoke": "tsx src/smoke.ts"
+    "smoke": "tsx src/smoke.ts",
+    "seed:payments": "tsx src/seed-payments.ts"
   },
   "keywords": [
     "mcp",
@@ -32,13 +33,11 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "zod": "^4.4.3",
-    "qrcode": "^1.5.4"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^26.1.1",
     "tsx": "^4.23.1",
-    "typescript": "^7.0.2",
-    "@types/qrcode": "^1.5.5"
+    "typescript": "^7.0.2"
   }
 }
