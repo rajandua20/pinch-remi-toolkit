@@ -57,6 +57,11 @@ section.alt{background:var(--bg)}
 .nav-panel a.here{color:var(--brand)}
 .nav-panel-label{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:11px 11px 5px}
 .nav-panel-label:first-child{padding-top:5px}
+.nav-panel-heading{display:block;text-decoration:none;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:11px 11px 5px;transition:color .12s ease}
+.nav-panel-heading:first-child{padding-top:5px}
+.nav-panel-heading:hover{color:var(--brand)}
+.nav-panel-heading small{text-transform:none;letter-spacing:0}
+.nav-panel a.nav-panel-sub{padding-left:20px}
 .nav-toggle{display:none;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);cursor:pointer}
 .nav-toggle svg{width:20px;height:20px}
 .topnav.nav-open .nav-toggle{background:#F1F2F7;color:var(--brand)}
@@ -270,15 +275,14 @@ footer a{color:var(--brand)}
       <div class="nav-group" data-group="build">
         <button class="nav-item" type="button" aria-expanded="false" aria-controls="navpanel-build">The build<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-panel" id="navpanel-build" role="group" aria-label="The build">
-        <a class="here" href="#top">Hackathon build<small>The submission summary page</small></a>
-        <a class="here" href="#story">The story<small>The four gaps Remi closes</small></a>
-        <a class="here" href="#actors">Three actors<small>Platform, business, customer — BYO keys</small></a>
-        <a class="here" href="#depth">Domain depth<small>Dishonours, splits, settlement, cashflow</small></a>
-        <a href="build-log.html">Build log<small>Timeline, decisions, open issues</small></a>
-        <a href="build-log.html#progress">Progress</a>
-        <a href="build-log.html#timeline">Timeline</a>
-        <a href="build-log.html#decisions">Decisions</a>
-        <a href="build-log.html#issues">Open issues</a>
+        <a class="nav-panel-heading here" href="#top">Hackathon build<small>The submission summary page</small></a>
+        <a class="nav-panel-sub here" href="#story">The story<small>The four gaps Remi closes</small></a>
+        <a class="nav-panel-sub here" href="#actors">Three actors<small>Platform, business, customer — BYO keys</small></a>
+        <a class="nav-panel-sub here" href="#depth">Domain depth<small>Dishonours, splits, settlement, cashflow</small></a>
+        <a class="nav-panel-heading" href="build-log.html">Progress<small>Timeline, decisions, open issues</small></a>
+        <a class="nav-panel-sub" href="build-log.html#timeline">Timeline</a>
+        <a class="nav-panel-sub" href="build-log.html#decisions">Decisions</a>
+        <a class="nav-panel-sub" href="build-log.html#issues">Open issues</a>
         </div>
       </div>
       <div class="nav-group" data-group="security">

@@ -60,6 +60,11 @@ section.alt{background:var(--bg)}
 .nav-panel a.here{color:var(--brand)}
 .nav-panel-label{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:11px 11px 5px}
 .nav-panel-label:first-child{padding-top:5px}
+.nav-panel-heading{display:block;text-decoration:none;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:11px 11px 5px;transition:color .12s ease}
+.nav-panel-heading:first-child{padding-top:5px}
+.nav-panel-heading:hover{color:var(--brand)}
+.nav-panel-heading small{text-transform:none;letter-spacing:0}
+.nav-panel a.nav-panel-sub{padding-left:20px}
 .nav-toggle{display:none;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);cursor:pointer}
 .nav-toggle svg{width:20px;height:20px}
 .topnav.nav-open .nav-toggle{background:#F1F2F7;color:var(--brand)}
@@ -299,15 +304,14 @@ footer a{color:var(--brand)}
       <div class="nav-group" data-group="build">
         <button class="nav-item" type="button" aria-expanded="false" aria-controls="navpanel-build">The build<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-panel" id="navpanel-build" role="group" aria-label="The build">
-        <a href="hackathon.html">Hackathon build<small>The submission summary page</small></a>
-        <a href="hackathon.html#story">The story<small>The four gaps Remi closes</small></a>
-        <a href="hackathon.html#actors">Three actors<small>Platform, business, customer — BYO keys</small></a>
-        <a href="hackathon.html#depth">Domain depth<small>Dishonours, splits, settlement, cashflow</small></a>
-        <a href="build-log.html">Build log<small>Timeline, decisions, open issues</small></a>
-        <a href="build-log.html#progress">Progress</a>
-        <a href="build-log.html#timeline">Timeline</a>
-        <a href="build-log.html#decisions">Decisions</a>
-        <a href="build-log.html#issues">Open issues</a>
+        <a class="nav-panel-heading" href="hackathon.html">Hackathon build<small>The submission summary page</small></a>
+        <a class="nav-panel-sub" href="hackathon.html#story">The story<small>The four gaps Remi closes</small></a>
+        <a class="nav-panel-sub" href="hackathon.html#actors">Three actors<small>Platform, business, customer — BYO keys</small></a>
+        <a class="nav-panel-sub" href="hackathon.html#depth">Domain depth<small>Dishonours, splits, settlement, cashflow</small></a>
+        <a class="nav-panel-heading" href="build-log.html">Progress<small>Timeline, decisions, open issues</small></a>
+        <a class="nav-panel-sub" href="build-log.html#timeline">Timeline</a>
+        <a class="nav-panel-sub" href="build-log.html#decisions">Decisions</a>
+        <a class="nav-panel-sub" href="build-log.html#issues">Open issues</a>
         </div>
       </div>
       <div class="nav-group" data-group="security">
@@ -507,7 +511,7 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
       <div class="live-form">
         <div class="field field-wide">
           <label for="lv-endpoint">MCP endpoint URL</label>
-          <input id="lv-endpoint" type="url" value="http://localhost:3333/mcp" spellcheck="false"/>
+          <input id="lv-endpoint" type="url" value="https://pinch-mcp-238547086112.australia-southeast1.run.app/mcp" spellcheck="false"/>
           <div class="hint">start yours with: <code>node dist/index.js --http 3333 --cors</code></div>
         </div>
         <div class="field">
@@ -623,9 +627,9 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
     <p style="color:var(--mut);margin:0 0 20px;max-width:760px">Key platforms under LyboAI. Orange tags mark what this hackathon updated or created; indigo marks existing platforms carried in unchanged.</p>
     <div class="grid grid-2">
       <div class="card">
-        <h3>Agents Platform</h3>
-        <p>The flow-engine + knowledge-grounding platform that turns chatbots into agents that <b>do</b> things. Powers the Remi family and the CoachPlus Front Desk.</p>
-        <div class="tags"><span class="tag">Hackathon · updated</span></div>
+        <h3>Agents Platform — Remi is the moat</h3>
+        <p><b>Remi and Remi Front Desk are the differentiator</b> — a deployable, guard-railed <b>agent family</b> on LyboAI's flow-engine + knowledge-grounding platform, not a thin wrapper. Remi designs billing, collects, diagnoses failures and recovers, with a human-approval gate on every write. The MCP server is one pillar underneath; the agents are the defensible product.</p>
+        <div class="tags"><span class="tag">Hackathon · updated</span><span class="tag warn">the moat</span></div>
         <details style="margin-top:12px"><summary style="cursor:pointer;font-weight:600;color:var(--brand)">Show more</summary>
           <ul style="margin:10px 0 0;padding-left:18px;color:var(--mut);font-size:14.5px;line-height:1.6">
             <li>MCP tool-calling with a preview → human-approval → <code>confirm:true</code> gate.</li>
@@ -672,7 +676,7 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
     <h3 style="font-size:20px;margin:34px 0 4px">CoachPlus — the vertical product</h3>
     <div class="card" style="margin-top:8px">
       <p style="margin-top:0">CoachPlus is a coaching marketplace and business platform: coaches list profiles discoverable by location and category, sell courses and sessions, take bookings and enrolments, run a tenant website and app, and get paid — with GST invoicing built in. It is <b>in build and not yet launched</b>, and the <b>prime candidate</b> for integrating the LyboAI Agents Platform (Remi) with the Pinch payment rails demonstrated here.</p>
-      <div class="tags"><span class="tag warn">In build · pre-launch</span><span class="tag">Hackathon · payments integrated</span><span class="tag ok">integration candidate</span></div>
+      <div class="tags"><span class="tag warn">In build · pre-launch</span><span class="tag">Hackathon · payments integrated</span><span class="tag">Remi + Front Desk embedded</span><span class="tag ok">integration candidate</span></div>
       <details style="margin-top:12px"><summary style="cursor:pointer;font-weight:600;color:var(--brand)">Show more</summary>
         <ul style="margin:10px 0 0;padding-left:18px;color:var(--mut);font-size:14.5px;line-height:1.6">
           <li><b>Platform features:</b> geo + category coach discovery, courses &amp; enrolments, bookings, availability, tenant websites + app configurations, and GST-aware invoicing.</li>
