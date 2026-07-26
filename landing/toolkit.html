@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>pinch-mcp &amp; the Remi Toolkit — build AI payments on Pinch</title>
+<meta name="description" content="The pinch-mcp server and the Remi toolkit: what they are, how they work, where to see them live, and how to get them."/>
+<style>
+  :root{--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--surface:#f8fafc;--orange:#F26522;--purple:#7C5CFC;--ok:#10b981;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:#fff;line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--orange)}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+  header.hero{background:linear-gradient(160deg,#111827,#1f2937);color:#fff;padding:56px 0 48px}
+  .hero .wrap{max-width:960px}
+  .back{display:inline-block;color:#cbd5e1;text-decoration:none;font-size:14px;margin-bottom:20px}
+  .kicker{text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:700;color:var(--orange);margin:0 0 8px}
+  h1{font-size:38px;line-height:1.15;margin:0 0 12px}
+  h1 .grad{background:linear-gradient(90deg,var(--orange),var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lead{font-size:18px;color:#cbd5e1;max-width:680px}
+  .cta-row{margin-top:24px;display:flex;flex-wrap:wrap;gap:12px}
+  .btn{display:inline-block;padding:11px 20px;border-radius:12px;font-weight:700;text-decoration:none;font-size:15px}
+  .btn-primary{background:var(--orange);color:#fff}
+  .btn-ghost{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.18)}
+  section{padding:48px 0;border-bottom:1px solid var(--line)}
+  section h2{font-size:26px;margin:0 0 8px}
+  section .sub{color:var(--muted);margin:0 0 24px;max-width:680px}
+  .grid{display:grid;gap:16px}
+  .grid-2{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:720px){.grid-2,.grid-3{grid-template-columns:1fr}h1{font-size:30px}}
+  .card{border:1px solid var(--line);border-radius:16px;padding:20px;background:#fff}
+  .card h3{margin:0 0 6px;font-size:17px}
+  .card p{margin:0;color:var(--muted);font-size:14.5px}
+  .tag{display:inline-block;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;color:var(--muted);margin:3px 3px 0 0}
+  .tag.orange{color:var(--orange);border-color:#fcd9c6;background:#fff5ef}
+  code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  pre{background:#0f172a;color:#e2e8f0;padding:16px;border-radius:12px;overflow:auto;font-size:13px}
+  .live{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+  .live a{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;text-decoration:none;font-weight:600;font-size:14px;color:var(--ink)}
+  .live a:hover{border-color:var(--orange)}
+  .note{background:#fff5ef;border:1px solid #fcd9c6;border-radius:14px;padding:16px;color:#7c3a12;font-size:14.5px}
+  ul.clean{margin:0;padding-left:18px;color:var(--muted);font-size:14.5px}
+  ul.clean li{margin:4px 0}
+  footer{padding:32px 0;color:var(--muted);font-size:13px;text-align:center}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <a class="back" href="/">← Back to the overview</a>
+    <p class="kicker">Toolkit</p>
+    <h1><span class="grad">pinch-mcp</span> &amp; the Remi Toolkit</h1>
+    <p class="lead">One Pinch payments core, wrapped once as an MCP server, plus everything you need to put a responsible AI payments agent in front of it — the agent pack, host recipes, a security guide and a live playground.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#download">Get the toolkit</a>
+      <a class="btn btn-ghost" href="#see-it-live">See it live</a>
+    </div>
+  </div>
+</header>
+
+<!-- pinch-mcp -->
+<section>
+  <div class="wrap">
+    <h2>pinch-mcp — the server</h2>
+    <p class="sub">A community MCP server over the Pinch Payments API (Australia). 23 tools — 13 read, 10 approval-gated writes — behind <b>stdio</b> and <b>Streamable HTTP</b>, so Claude Desktop, Cursor, LyboAI or any MCP client gets the same capabilities. Every write refuses without <code>confirm:true</code> and returns a preview first; the gate lives in the tool layer, not the prompt.</p>
+    <div class="grid grid-3">
+      <div class="card"><h3>Read (13)</h3><p>Payments, payers, subscriptions (with stall detection), cashflow &amp; settlement summaries, payer statements, split-bill status, events — plus a dishonour-diagnosis map that turns Pinch codes into plain English.</p></div>
+      <div class="card"><h3>Guarded writes (10)</h3><p>Payment links, subscriptions (term / deposit / instalments), splits, refunds, retries, discounts, QR links, plus <code>design_billing</code>, <code>import_payers</code> and one-touch <code>onboard_business</code>. All approve-then-act.</p></div>
+      <div class="card"><h3>Hardened</h3><p>Per-tenant token cache keyed by secret, per-IP rate limiting, body-size caps, output caps, per-call audit logging, a <code>toolsHash</code> manifest on <code>/meta</code>, and a non-root container. BYO keys — no fund aggregation.</p></div>
+    </div>
+    <p style="margin-top:16px"><span class="tag orange">stdio</span><span class="tag orange">Streamable HTTP</span><span class="tag">OAuth2 client-credentials</span><span class="tag">metadata attribution</span><span class="tag">Time-Travel sandbox</span></p>
+  </div>
+</section>
+
+<!-- toolkit contents -->
+<section>
+  <div class="wrap">
+    <h2>The toolkit — everything around it</h2>
+    <p class="sub">So any platform can put a safe AI payments agent on Pinch without starting from scratch.</p>
+    <div class="grid grid-2">
+      <div class="card"><h3>Agent pack</h3><p>Remi's system prompt, the Design·Do·Ask·Fix playbooks, the dishonour taxonomy, and the guardrail language — byte-identical across every deployment shape.</p></div>
+      <div class="card"><h3>Host recipes</h3><p>Drop-in configs for Claude Desktop, LyboAI, and website/app widget embeds — back-office Remi and a restricted customer-facing Front Desk.</p></div>
+      <div class="card"><h3>Security guide</h3><p><code>SECURITY.md</code> mapped to OWASP GenAI, the SlowMist checklist and Palo Alto's MCP analysis — plus a production hardening roadmap.</p></div>
+      <div class="card"><h3>Seeders &amp; playground</h3><p>A sandbox seed script, a per-coach real-payments seeder, and the live <a href="/#playground">playground</a> to call the tools yourself.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- see it live -->
+<section id="see-it-live">
+  <div class="wrap">
+    <h2>See it live</h2>
+    <p class="sub">Go and poke at the real thing — no slides.</p>
+    <div class="live">
+      <a href="https://pinch-mcp-238547086112.australia-southeast1.run.app/meta" target="_blank" rel="noopener">The live server — <code>/meta</code> (23 tools) ↗</a>
+      <a href="https://lyboai.app/agents-platform" target="_blank" rel="noopener">Remi in the LyboAI Agent Family ↗</a>
+      <a href="https://www.thecoachplus.com" target="_blank" rel="noopener">CoachPlus — the live reference ↗</a>
+      <a href="/#playground">The tools playground ↗</a>
+      <a href="/build-log.html">The day-by-day build log ↗</a>
+    </div>
+    <!-- SCREENSHOTS: drop product shots into landing/assets/ and reference them here, e.g.
+         <img src="assets/coachplus-payments.png" alt="CoachPlus Payments & Billing" style="width:100%;border:1px solid var(--line);border-radius:14px;margin-top:20px"> -->
+  </div>
+</section>
+
+<!-- download -->
+<section id="download">
+  <div class="wrap">
+    <h2>Get the toolkit</h2>
+    <p class="sub">The <b>toolkit</b> is what we share — the agent pack, recipes, security guide and seeders. The hosted MCP server itself stays proprietary (a gated service, not an open relay), so you run your own or connect to ours with a key.</p>
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Clone the toolkit</h3>
+        <pre>git clone https://github.com/lybotechgroup/pinch-remi-toolkit
+cd pinch-remi-toolkit/packages/pinch-mcp
+cp .env.example .env   # add your Pinch sandbox keys
+npm install &amp;&amp; npm run smoke</pre>
+        <p style="margin-top:10px">The agent pack, recipes and security guide live at the repo root; the server is under <code>packages/pinch-mcp</code>.</p>
+      </div>
+      <div class="card">
+        <h3>What you need</h3>
+        <ul class="clean">
+          <li>A Pinch account + sandbox API keys (<code>web.getpinch.com.au</code> → API keys)</li>
+          <li>Node 20+ for the server; an MCP host (Claude Desktop / Cursor / LyboAI)</li>
+          <li>Read <code>SETUP.md</code> and <code>SECURITY.md</code> before going live</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note" style="margin-top:16px"><b>Access:</b> replace the clone URL above with the real repo once it's shared. If the repo is private, point this button at a release zip on this site or a request-access form — see the note in <code>SETUP.md</code>.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">Built by LYBOTECH GROUP · <a href="/">Overview</a> · <a href="/build-log.html">Build log</a> · <a href="/hackathon.html">Hackathon</a></div>
+</footer>
+
+</body>
+</html>

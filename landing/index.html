@@ -60,11 +60,6 @@ section.alt{background:var(--bg)}
 .nav-panel a.here{color:var(--brand)}
 .nav-panel-label{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:11px 11px 5px}
 .nav-panel-label:first-child{padding-top:5px}
-.nav-panel-heading{display:block;text-decoration:none;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:11px 11px 5px;transition:color .12s ease}
-.nav-panel-heading:first-child{padding-top:5px}
-.nav-panel-heading:hover{color:var(--brand)}
-.nav-panel-heading small{text-transform:none;letter-spacing:0}
-.nav-panel a.nav-panel-sub{padding-left:20px}
 .nav-toggle{display:none;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);cursor:pointer}
 .nav-toggle svg{width:20px;height:20px}
 .topnav.nav-open .nav-toggle{background:#F1F2F7;color:var(--brand)}
@@ -304,14 +299,15 @@ footer a{color:var(--brand)}
       <div class="nav-group" data-group="build">
         <button class="nav-item" type="button" aria-expanded="false" aria-controls="navpanel-build">The build<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-panel" id="navpanel-build" role="group" aria-label="The build">
-        <a class="nav-panel-heading" href="hackathon.html">Hackathon build<small>The submission summary page</small></a>
-        <a class="nav-panel-sub" href="hackathon.html#story">The story<small>The four gaps Remi closes</small></a>
-        <a class="nav-panel-sub" href="hackathon.html#actors">Three actors<small>Platform, business, customer — BYO keys</small></a>
-        <a class="nav-panel-sub" href="hackathon.html#depth">Domain depth<small>Dishonours, splits, settlement, cashflow</small></a>
-        <a class="nav-panel-heading" href="build-log.html">Progress<small>Timeline, decisions, open issues</small></a>
-        <a class="nav-panel-sub" href="build-log.html#timeline">Timeline</a>
-        <a class="nav-panel-sub" href="build-log.html#decisions">Decisions</a>
-        <a class="nav-panel-sub" href="build-log.html#issues">Open issues</a>
+        <a href="hackathon.html">Hackathon build<small>The submission summary page</small></a>
+        <a href="hackathon.html#story">The story<small>The four gaps Remi closes</small></a>
+        <a href="hackathon.html#actors">Three actors<small>Platform, business, customer — BYO keys</small></a>
+        <a href="hackathon.html#depth">Domain depth<small>Dishonours, splits, settlement, cashflow</small></a>
+        <a href="build-log.html">Build log<small>Timeline, decisions, open issues</small></a>
+        <a href="build-log.html#progress">Progress</a>
+        <a href="build-log.html#timeline">Timeline</a>
+        <a href="build-log.html#decisions">Decisions</a>
+        <a href="build-log.html#issues">Open issues</a>
         </div>
       </div>
       <div class="nav-group" data-group="security">
@@ -391,24 +387,28 @@ footer a{color:var(--brand)}
         <h3>pinch-mcp</h3>
         <p>A 23-tool MCP server over the Pinch API — payments, payers, subscriptions with stall detection, cashflow &amp; settlement summaries, payer statements, split-bill tracking, QR payment links, and a dishonour-diagnosis map. stdio + Streamable HTTP. Every write is approval-gated: no <code>confirm:true</code>, no API call.</p>
         <div class="tags"><span class="tag">13 read</span><span class="tag warn">10 guarded writes</span><span class="tag ok">confirm-guard</span></div>
+        <a href="https://pinch-mcp-238547086112.australia-southeast1.run.app/meta" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;font-size:13px;font-weight:700;color:#F26522;text-decoration:none">See the live server (/meta, 23 tools) ↗</a>
       </div>
       <div class="card">
         <div class="icon tint-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
         <h3>Remi agent</h3>
         <p>The AI payments teammate: <b>Design</b> billing from plain English, <b>Do</b> collections (links, subscriptions, splits), <b>Ask</b> instant money questions, <b>Fix</b> failed payments with diagnosed causes and approved recoveries. Ships in three deployment shapes on LyboAI. Named for <b>remittance</b> — the safe movement of money is the one job it exists to do.</p>
         <div class="tags"><span class="tag">Design</span><span class="tag">Do</span><span class="tag">Ask</span><span class="tag">Fix</span></div>
+        <a href="https://lyboai.app/agents-platform" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;font-size:13px;font-weight:700;color:#F26522;text-decoration:none">See Remi in the LyboAI Agent Family ↗</a>
       </div>
       <div class="card">
         <div class="icon tint-indigo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></div>
         <h3>CoachPlus integration</h3>
         <p>A live reference deployment: the Billing &amp; Payments panel with a cashflow digest and needs-attention feed, Pinch-powered collections (payment links, real recurring subscriptions, webhooks), and Remi embedded as the coach's payments front desk.</p>
         <div class="tags"><span class="tag ok">live reference</span><span class="tag">Pinch collections</span></div>
+        <a href="https://www.thecoachplus.com" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;font-size:13px;font-weight:700;color:#F26522;text-decoration:none">Open CoachPlus ↗</a>
       </div>
       <div class="card">
         <div class="icon tint-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg></div>
         <h3>The Toolkit</h3>
         <p>Everything packaged for reuse: the agent pack (system prompt, playbooks, dishonour taxonomy, guardrails), recipes for Claude Desktop / LyboAI / widget embeds, a sandbox seed script — and this playground.</p>
         <div class="tags"><span class="tag">agent pack</span><span class="tag">recipes</span><span class="tag">playground</span></div>
+        <a href="toolkit.html" style="display:inline-block;margin-top:12px;font-size:13px;font-weight:700;color:#F26522;text-decoration:none">Explore &amp; download the toolkit ↗</a>
       </div>
     </div>
   </div>
@@ -511,7 +511,7 @@ NEEDS REVIEW: Platform fee retention (7%) requires Pinch Managed Merchants / app
       <div class="live-form">
         <div class="field field-wide">
           <label for="lv-endpoint">MCP endpoint URL</label>
-          <input id="lv-endpoint" type="url" value="https://pinch-mcp-238547086112.australia-southeast1.run.app/mcp" spellcheck="false"/>
+          <input id="lv-endpoint" type="url" value="http://localhost:3333/mcp" spellcheck="false"/>
           <div class="hint">start yours with: <code>node dist/index.js --http 3333 --cors</code></div>
         </div>
         <div class="field">

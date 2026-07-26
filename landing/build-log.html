@@ -50,11 +50,6 @@ section.alt{background:var(--bg)}
 .nav-panel a.here{color:var(--brand)}
 .nav-panel-label{font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:11px 11px 5px}
 .nav-panel-label:first-child{padding-top:5px}
-.nav-panel-heading{display:block;text-decoration:none;font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding:11px 11px 5px;transition:color .12s ease}
-.nav-panel-heading:first-child{padding-top:5px}
-.nav-panel-heading:hover{color:var(--brand)}
-.nav-panel-heading small{text-transform:none;letter-spacing:0}
-.nav-panel a.nav-panel-sub{padding-left:20px}
 .nav-toggle{display:none;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);cursor:pointer}
 .nav-toggle svg{width:20px;height:20px}
 .topnav.nav-open .nav-toggle{background:#F1F2F7;color:var(--brand)}
@@ -222,14 +217,16 @@ footer a{color:var(--brand)}
       <div class="nav-group" data-group="build">
         <button class="nav-item" type="button" aria-expanded="false" aria-controls="navpanel-build">The build<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
         <div class="nav-panel" id="navpanel-build" role="group" aria-label="The build">
-        <a class="nav-panel-heading" href="hackathon.html">Hackathon build<small>The submission summary page</small></a>
-        <a class="nav-panel-sub" href="hackathon.html#story">The story<small>The four gaps Remi closes</small></a>
-        <a class="nav-panel-sub" href="hackathon.html#actors">Three actors<small>Platform, business, customer — BYO keys</small></a>
-        <a class="nav-panel-sub" href="hackathon.html#depth">Domain depth<small>Dishonours, splits, settlement, cashflow</small></a>
-        <a class="nav-panel-heading here" href="#top">Progress<small>Timeline, decisions, open issues</small></a>
-        <a class="nav-panel-sub here" href="#timeline">Timeline</a>
-        <a class="nav-panel-sub here" href="#decisions">Decisions</a>
-        <a class="nav-panel-sub here" href="#issues">Open issues</a>
+        <a href="hackathon.html">Hackathon build<small>The submission summary page</small></a>
+        <a href="hackathon.html#story">The story<small>The four gaps Remi closes</small></a>
+        <a href="hackathon.html#actors">Three actors<small>Platform, business, customer — BYO keys</small></a>
+        <a href="hackathon.html#depth">Domain depth<small>Dishonours, splits, settlement, cashflow</small></a>
+        <a class="here" href="#top">Build log<small>Timeline, decisions, open issues</small></a>
+        <span class="nav-panel-label">On this page</span>
+        <a class="here" href="#progress">Progress</a>
+        <a class="here" href="#timeline">Timeline</a>
+        <a class="here" href="#decisions">Decisions</a>
+        <a class="here" href="#issues">Open issues</a>
         </div>
       </div>
       <div class="nav-group" data-group="security">
@@ -343,11 +340,27 @@ footer a{color:var(--brand)}
     <h2>Day by day, newest first</h2>
     <p class="lead">Short factual entries, in the order they happened. Friday's times are AEST; Saturday's entries are numbered in sequence.</p>
 
+    <!-- Sunday -->
+    <div class="day">
+      <div class="day-head">
+        <h3>Sunday 26 July</h3>
+        <span class="day-chip today">DAY 3 · IN PROGRESS</span>
+      </div>
+      <ul class="tl">
+        <li><span class="t">SUN · 01</span><b>Two prod fixes.</b> The Finance Console tabs all errored — root cause was a real async-context bug: credentials were bound inside an awaited helper, so <code>AsyncLocalStorage.enterWith</code> didn't survive the return and every query ran unauthenticated. Bound in-handler instead. Separately, the sandbox 503'd because Amplify passes console env to the build but not the SSR runtime — <code>PINCH_MCP_URL</code> is now baked into <code>next.config</code> alongside the other server vars.</li>
+        <li><span class="t">SUN · 02</span><b>Agent widgets wired end-to-end.</b> The LyboAI widget injectors existed but were mounted nowhere; now the back-office Remi bubble and the public Front Desk both render. Added a per-coach backend Remi key, a guided Next/Back onboarding wizard plus a Settings tab to enter both agent keys, a "Test connection" check, and a connect→console auto-refresh so setup no longer dead-ends.</li>
+        <li><span class="t">SUN · 03</span><b>Managed-agent lock-down.</b> On LyboAI, a managed org's Remi core is now locked server-side — a business can skin the agent (name, avatar, welcome, theme) and <em>add</em> knowledge, but can't rewrite the prompt, guardrails, tools or channels, or remove the seeded RAG. Keeps integrity while each business still makes it their own. QR tool folded into the seeded preset (23 tools); the deploy script was split so a deploy ships code only and can never clobber env/secrets.</li>
+        <li><span class="t">SUN · 04</span><b>Business vs. coach — resolved.</b> The Pinch <b>merchant id is business-level</b> (keys live per tenant), so Payments &amp; Billing and Integrations moved into the <b>business</b> portal, with a Business↔Coach <b>switcher</b> for accounts that are both. The gate is <b>tenant ownership</b>, not a role — because a solo coach owns their own <code>individual</code> tenant without the <code>tenant_owner</code> role. A staff coach (member, not owner) gets a reduced portal: their profile, courses and a "My earnings" view, but no merchant finance, agents, site or plan controls.</li>
+        <li><span class="t">SUN · 05</span><b>Per-coach revenue attribution.</b> One business = one Pinch merchant account (not a Pinch app per instructor). Transactions are tagged with a <code>coachId</code> in Pinch <b>metadata</b> — the attribution pattern Pinch's own team endorses, since there's no first-class coupon/tag concept — and the finance console adds a Coach column and a Group-by-coach split. A staff coach sees only their own.</li>
+        <li><span class="t">SUN · 06</span><b>Seeders + real payments.</b> A staff coach and learners per business, and a per-coach payments seeder that produces <b>real</b> sandbox transactions on Pinch's hosted page — a successful direct debit, a dishonoured direct debit, and a card link paid with a test card — each attributed to a coach. Payments demo runbook written.</li>
+      </ul>
+    </div>
+
     <!-- Saturday -->
     <div class="day">
       <div class="day-head">
         <h3>Saturday 25 July</h3>
-        <span class="day-chip today">DAY 2 · IN PROGRESS</span>
+        <span class="day-chip past">DAY 2 · COMPLETE</span>
       </div>
       <ul class="tl">
         <li><span class="t">SAT · 01</span><b>Security pass #1.</b> Critical multi-tenant token-cache fix — the cache key now includes the secret, so one tenant can never be served another tenant's token. Plus per-IP rate limiting, request-body size caps, and a hardened non-root container.</li>
@@ -436,6 +449,11 @@ footer a{color:var(--brand)}
         <div class="dec-num">DECISION G</div>
         <h3>Gate the hosted MCP server</h3>
         <p>Move the hosted endpoint from an open relay to a gated service: a login / registration step, per-merchant <b>domain registration</b>, and headless operation. Today IAM + a shared-secret header gate it; the login + domain-registration console is a Polish-Week build.</p>
+      </div>
+      <div class="card">
+        <div class="dec-num">DECISION H</div>
+        <h3>The business is the merchant</h3>
+        <p>The Pinch merchant account is <b>per business</b>, not per coach — so Payments &amp; Billing and Integrations live in the business portal, gated by tenant <b>ownership</b> (a solo coach owns their own tenant; a staff coach doesn't). A Business↔Coach switcher serves accounts that are both. Individual coaches within a business are attributed with a <code>coachId</code> in Pinch <b>metadata</b>, so one account's transactions split per coach — no separate Pinch app per instructor.</p>
       </div>
     </div>
     <div class="notice"><b>Earlier Friday calls that still stand:</b> the Do / Ask / Fix triad from the ~19:50 huddle (later extended with Design); payment-link-first collections for the hackathon, with <code>metadata</code> passthrough for correlation instead of fragile description markers; split payments brought in-scope as an underserved shared-cost wedge for service businesses (~22:30 founder call), with exposure thresholds of &gt;14 days or &gt;25% of total; and statement of accounts added now, with Xero and the report suite deferred to the roadmap — First Submission locks the concept Sunday, and Polish Week forbids new features.</div>
